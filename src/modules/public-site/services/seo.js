@@ -483,6 +483,11 @@ export function staticPageDefaults(context) {
       title: `Services & Prices | ${name}, ${place}`,
       description: `Full price list at ${name}, ${info.address}: haircuts, fades, beard trims, colour, highlights, keratin, facials, makeup and bridal styling.`,
     },
+    '/women': {
+      label: "Women's services",
+      title: `Women's Salon Services in ${town} | ${name}`,
+      description: `Haircuts, colour, keratin, hair spa, nails, facials, waxing, makeup and bridal at ${name}, ${info.address}. Tap a service to book.`,
+    },
     '/packages': {
       label: 'Packages',
       title: `Packages & Prices | ${name}, ${town}`,

@@ -9,10 +9,9 @@ import { createWhatsAppLink } from '../utils/whatsapp';
 
 const baseNavLinks = [
   ['Home', '/'],
-  ['Services', '/services'],
+  ["Women's services", '/women'],
+  ['All services', '/services'],
   ['Packages', '/packages'],
-  ['Team', '/staff'],
-  ['Gallery', '/gallery'],
   ['Contact', '/contact'],
 ];
 

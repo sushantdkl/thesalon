@@ -1,5 +1,10 @@
+import Link from 'next/link';
 import { CmsImage } from './cms-image';
+import { bookingHref } from '../data/women-services';
 import type { PublicPackage, PublicService, PublicStaffMember } from '../types';
+
+const BOOK_SMALL = 'inline-flex min-h-10 items-center justify-center rounded-full border border-glow/60 px-4 text-sm font-medium text-plaster transition hover:bg-glow hover:text-cinder';
+const BOOK_FULL = 'mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-glow px-6 text-[0.95rem] font-medium text-cinder transition hover:brightness-110';
 
 export function ServiceCard({
   service,
@@ -70,6 +75,9 @@ export function ServiceCard({
         >
           {service.priceLabel}
         </p>
+        <Link href={bookingHref(service.name.toLowerCase(), service.name)} className={`${BOOK_SMALL} justify-self-start md:col-start-2 md:justify-self-end`} aria-label={`Book ${service.name}`}>
+          Book
+        </Link>
       </article>
     );
   }
@@ -131,6 +139,7 @@ export function PackageCard({
             </li>
           ))}
         </ul>
+        <Link href={bookingHref(item.name.toLowerCase(), item.name)} className={BOOK_FULL}>Book this package</Link>
       </article>
     );
   }
@@ -144,6 +153,7 @@ export function PackageCard({
       <ul className="mt-5 grid gap-2 text-sm text-plaster/85">
         {item.includes.map((service) => <li key={service}>- {service}</li>)}
       </ul>
+      <Link href={bookingHref(item.name.toLowerCase(), item.name)} className={BOOK_FULL}>Book this package</Link>
     </article>
   );
 }

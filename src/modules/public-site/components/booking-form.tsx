@@ -92,6 +92,26 @@ export function BookingForm({
   const today = nepalToday();
   const lastDay = addDays(today, options?.maxDaysAhead || 30);
 
+  // Links like /book-appointment?service=haircut&label=Men's+haircut arrive with the service
+  // already chosen, so a visitor goes from one tap on the site straight to picking a time.
+  const [requested, setRequested] = useState('');
+  useEffect(() => {
+    if (!options) return;
+    const params = new URLSearchParams(window.location.search);
+    const keyword = (params.get('service') || '').trim().toLowerCase();
+    if (!keyword) return;
+    const label = (params.get('label') || '').trim() || keyword;
+    setRequested(label);
+    // Closest name wins: "haircut" picks "Haircut" over "Haircut + Wash".
+    const match = (options.services || [])
+      .filter((service) => service.name.toLowerCase().includes(keyword))
+      .sort((a, b) => Number(b.name.toLowerCase() === keyword) - Number(a.name.toLowerCase() === keyword)
+        || Number(b.name.toLowerCase().startsWith(keyword)) - Number(a.name.toLowerCase().startsWith(keyword))
+        || a.name.length - b.name.length)[0];
+    if (match) setServiceIds([match.id]);
+    else setNotes((current) => current || `Interested in: ${label}`);
+  }, [options]);
+
   useEffect(() => {
     if (!online || !date || !serviceIds.length) { setAvailability(null); return; }
     const params = new URLSearchParams({ date, services: serviceIds.join(',') });
@@ -171,7 +191,9 @@ export function BookingForm({
           <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
             <div className="lg:pt-6">
               <span className="text-[0.95rem] tracking-[0.04em] text-brass">{whatsappOnly ? 'WhatsApp booking' : 'Online booking'}</span>
-              <h1 className="mt-4 font-display text-4xl font-light leading-[1.15] tracking-tight text-plaster md:text-5xl">Book an appointment</h1>
+              <h1 className="mt-4 font-display text-4xl font-light leading-[1.15] tracking-tight text-plaster md:text-5xl">
+                {requested ? <>Book <span className="text-brass">{requested}</span></> : 'Book an appointment'}
+              </h1>
               <p className="mt-5 max-w-md text-sm font-light leading-relaxed text-plaster/75 md:text-base">
                 {whatsappOnly
                   ? 'Fill in your details and we will open WhatsApp with your booking request ready to send.'
@@ -203,7 +225,7 @@ export function BookingForm({
             ) : options === null ? (
               <div className="flex items-center justify-center border border-plaster/15 bg-panel-soft/85 p-10 text-plaster/70"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading…</div>
             ) : whatsappOnly ? (
-              <LegacyWhatsAppForm info={info} serviceOptions={legacyServices} staff={staff} />
+              <LegacyWhatsAppForm key={requested} info={info} serviceOptions={legacyServices} staff={staff} requested={requested} />
             ) : (
               <form onSubmit={submit} className="border border-plaster/15 bg-panel-soft/85 p-5 backdrop-blur-sm md:p-8" noValidate>
                 <fieldset>
@@ -300,8 +322,12 @@ export function BookingForm({
 }
 
 /** The original WhatsApp-only request, used when online booking is switched off. */
-function LegacyWhatsAppForm({ info, serviceOptions, staff }: { info: BookingInfo; serviceOptions: string[]; staff: PublicStaffMember[] }) {
-  const [form, setForm] = useState({ name: '', phone: '', service: '', preferredStaff: '', date: '', time: '', message: '' });
+function LegacyWhatsAppForm({ info, serviceOptions, staff, requested = '' }: { info: BookingInfo; serviceOptions: string[]; staff: PublicStaffMember[]; requested?: string }) {
+  const [form, setForm] = useState(() => {
+    const wanted = requested.toLowerCase();
+    const service = (wanted && serviceOptions.find((option) => option.toLowerCase().includes(wanted))) || '';
+    return { name: '', phone: '', service, preferredStaff: '', date: '', time: '', message: requested && !service ? `Interested in: ${requested}` : '' };
+  });
   const [error, setError] = useState('');
   const update = (key: keyof typeof form, value: string) => { setForm((current) => ({ ...current, [key]: value })); setError(''); };
   const submit = (event: FormEvent<HTMLFormElement>) => {

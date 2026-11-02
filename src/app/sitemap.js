@@ -1,3 +1,4 @@
+import { womenServices } from '@/modules/public-site/data/women-services';
 import Database from '@/lib/db/index';
 import { publishedReviews } from '@/lib/reviews/service';
 import { absoluteUrl } from '@/lib/seo/site';
@@ -17,7 +18,7 @@ export default async function sitemap() {
   } catch {
     hasReviews = false;
   }
-  const fixed = ['/', '/services', '/packages', '/staff', '/gallery', '/contact', '/book-appointment'];
+  const fixed = ['/', '/services', '/women', ...womenServices.map((item) => `/women/${item.slug}`), '/packages', '/staff', '/gallery', '/contact', '/book-appointment'];
   if (hasReviews) fixed.push('/reviews');
   if (context.articles.length) fixed.push('/guides');
 

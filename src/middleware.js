@@ -19,7 +19,7 @@ import { NextResponse } from 'next/server';
 const CANONICAL_HOST = (process.env.SITE_CANONICAL_HOST || 'thesalon.com.np').toLowerCase();
 
 // Public marketing pages worth moving from a staging host. Everything else stays (noindexed).
-const PUBLIC_PATHS = [/^\/$/, /^\/(services|packages|staff|gallery|contact|book-appointment|book|reviews|guides)(\/.*)?$/, /^\/(robots\.txt|sitemap\.xml)$/];
+const PUBLIC_PATHS = [/^\/$/, /^\/(services|women|packages|staff|gallery|contact|book-appointment|book|reviews|guides)(\/.*)?$/, /^\/(robots\.txt|sitemap\.xml)$/];
 
 function redirectTo(pathname, search) {
   return NextResponse.redirect(`https://${CANONICAL_HOST}${pathname}${search}`, 308);

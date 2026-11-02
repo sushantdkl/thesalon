@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowRight, Gift, House, ListChecks } from 'lucide-react';
 import { SiteShell } from '@/modules/public-site/components/site-shell';
 import { Section } from '@/modules/public-site/components/section';
 import { CustomerReviews } from '@/modules/public-site/components/customer-reviews';
@@ -7,6 +8,7 @@ import { StaffCarousel } from '@/modules/public-site/components/staff-carousel';
 import { CmsImage } from '@/modules/public-site/components/cms-image';
 import { getSiteContext, staticPageMetadata } from '@/modules/public-site/services/seo';
 import { createWhatsAppLink } from '@/modules/public-site/utils/whatsapp';
+import { bookingHref, womenServices } from '@/modules/public-site/data/women-services';
 import type { GalleryItem, PublicPackage, ServicePage } from '@/modules/public-site/types';
 
 export const dynamic = 'force-dynamic';
@@ -64,8 +66,18 @@ const SHADES = [
 // Mosaic slots for the first five gallery photos, as in the studio reference layout.
 const MOSAIC = ['row-span-2', 'sm:col-span-2', 'row-span-2', '', ''];
 
+// Men book in one tap: every button here opens the booking form with the service chosen.
+const MEN_QUICK = [
+  ['Beard trim', 'beard'],
+  ['Shave', 'shave'],
+  ['Hair colour', 'colour'],
+  ['Facial', 'facial'],
+] as const;
+
 const BTN_GLOW = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-glow px-6 py-3.5 text-[0.98rem] font-medium text-cinder transition hover:brightness-110 active:translate-y-px';
 const BTN_LINE = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-plaster/30 px-6 py-3.5 text-[0.98rem] font-medium text-plaster transition hover:border-plaster active:translate-y-px';
+const CHIP = 'inline-flex min-h-10 items-center rounded-full border border-plaster/15 bg-night/40 px-3.5 text-[0.9rem] text-plaster transition hover:border-glow hover:text-glow';
+const TILE = 'group flex min-h-[72px] items-center gap-4 rounded-2xl border border-line bg-panel/80 px-5 py-4 text-plaster no-underline transition hover:-translate-y-0.5 hover:border-glow/60';
 
 export default async function HomePage() {
   const context = await getSiteContext();
@@ -79,6 +91,7 @@ export default async function HomePage() {
   const colour = sections.about;
   const contact = sections.contact;
   const whatsappUrl = createWhatsAppLink(`Hello ${info.name}, I'd like to book a visit.`, info.whatsappNumber);
+  const homeServiceUrl = createWhatsAppLink(`Hello ${info.name}, I'd like to book a home service. Service: , Date: , Address: `, info.whatsappNumber);
   const tel = `tel:${String(info.phone || '').replace(/[^\d+]/g, '')}`;
   const heroTitle = hero.title || info.name;
   const gallery: GalleryItem[] = cms.gallery.slice(0, 5);
@@ -88,49 +101,105 @@ export default async function HomePage() {
     ['TikTok', info.social.tiktok],
   ].filter(([, href]) => href) as Array<[string, string]>;
 
+  const choices = [
+    {
+      id: 'men',
+      title: 'Men',
+      side: 'Barber chair',
+      image: '/img/clipper.jpg',
+      alt: 'Clipper fade in progress at the barber station',
+      position: 'object-center',
+      text: 'Haircut, fade and beard. Pick a time and you are done.',
+      cta: { label: "Book men's haircut", href: bookingHref('haircut', "Men's haircut") },
+      chips: MEN_QUICK.map(([label, keyword]) => ({ label, href: bookingHref(keyword, `Men's ${label.toLowerCase()}`) })),
+      chipsLabel: "Book another men's service",
+    },
+    {
+      id: 'women',
+      title: 'Women',
+      side: 'Hair & glam studio',
+      image: '/img/balayage.jpg',
+      alt: 'Long layered cut with soft brown balayage',
+      position: 'object-[50%_30%]',
+      text: 'Hair, colour, keratin, nails, skin and makeup.',
+      cta: { label: "See women's services", href: '/women' },
+      chips: womenServices.slice(0, 4).map((category) => ({ label: category.name, href: `/women/${category.slug}` })),
+      chipsLabel: "Women's service categories",
+    },
+  ];
+
   return (
     <SiteShell isHome>
       <main>
-        {hero.isVisible ? (
-          <header className="relative overflow-hidden">
-            <div aria-hidden="true" className="pointer-events-none absolute -right-[10%] -top-[10%] h-[90%] w-[70%] bg-[radial-gradient(closest-side,rgb(240_169_75/0.16),transparent)]" />
-            <div className="relative mx-auto grid max-w-[1180px] items-center gap-11 px-4 pb-16 pt-10 sm:px-6 md:grid-cols-2 md:gap-[clamp(32px,6vw,80px)] md:py-[clamp(48px,8vw,104px)] lg:px-10">
-              <div>
-                <p className="mb-5 text-[0.95rem] tracking-[0.04em] text-brass">{hero.subtitle || info.tagline}</p>
-                <h1 className="text-balance font-display text-[clamp(2.75rem,15vw,4rem)] font-normal leading-[0.95] tracking-[-0.01em] sm:text-[clamp(3rem,7.4vw,6rem)]">
-                  {heroTitle}
-                  {heroTitle === 'The Salon' ? <em className="mt-[0.12em] block text-[0.62em] italic text-brass">&amp; Glam Studio</em> : null}
-                  {/* Says what and where in the one H1, visibly — not hidden SEO text. */}
-                  <span className="mt-4 block font-jost text-sm font-medium uppercase tracking-[0.18em] text-haze">
-                    {settings.businessDescriptor}{place ? ` in ${place}` : ''}
-                  </span>
-                </h1>
-                <p className="mt-6 max-w-[40ch] text-[1.05rem] text-haze sm:text-[1.15rem]">{hero.description || info.description}</p>
-                <div className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-                  <Link href={hero.buttonLink || '/book-appointment'} className={BTN_GLOW}>{hero.buttonText || 'Book a visit'}</Link>
-                  <Link href="#services" className={BTN_LINE}>See services</Link>
-                </div>
-              </div>
-              <div className="relative aspect-square w-[min(88%,340px)] justify-self-center sm:w-[min(86%,400px)] md:w-[min(100%,460px)]">
-                <div className="salon-mirror absolute inset-0 rounded-full bg-[#0c0a09] p-2.5">
-                  <div className="relative h-full w-full overflow-hidden rounded-full">
-                    <CmsImage
-                      src={hero.imageUrl || info.assets.hero}
-                      alt={`Long layered cut with soft brown balayage, styled at ${info.name}`}
-                      fill
-                      priority
-                      sizes="(min-width: 768px) 460px, 88vw"
-                      className="object-cover object-[50%_30%]"
-                    />
-                  </div>
-                </div>
-                <div className="absolute -right-1.5 bottom-[4%] aspect-square w-[30%] overflow-hidden rounded-full border-[6px] border-night shadow-[0_0_24px_rgba(240,169,75,0.35)]">
-                  <CmsImage src={info.assets.heroMini} alt="Gold styling scissors in front of the salon's round mirrors" fill sizes="140px" className="object-cover" />
-                </div>
-              </div>
+        <header className="relative overflow-hidden">
+          <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[-12%] h-[62%] w-[95%] -translate-x-1/2 bg-[radial-gradient(closest-side,rgb(240_169_75/0.17),transparent)]" />
+          <div className="relative mx-auto max-w-[1180px] px-4 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-12 lg:px-10">
+            <div className="mx-auto max-w-[760px] text-center">
+              <p className="text-[0.95rem] tracking-[0.04em] text-brass">{hero.subtitle || info.tagline}</p>
+              <h1 className="mt-4 text-balance font-display text-[clamp(2.7rem,9vw,5rem)] font-normal leading-[0.96] tracking-[-0.01em]">
+                {heroTitle}
+                {heroTitle === 'The Salon' ? <em className="block text-[0.55em] italic text-brass sm:ml-3 sm:inline">&amp; Glam Studio</em> : null}
+                <span className="mt-5 block font-jost text-[0.8rem] font-medium uppercase tracking-[0.22em] text-haze">
+                  {settings.businessDescriptor}{place ? ` in ${place}` : ''}
+                </span>
+              </h1>
+              <ol className="mx-auto mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[0.92rem] text-haze" aria-label="How booking works">
+                {['Choose a service', 'Pick a free time', 'We confirm'].map((step, index) => (
+                  <li key={step} className="flex items-center gap-3">
+                    {index ? <span aria-hidden="true" className="h-px w-6 bg-line" /> : null}
+                    <span className="flex items-center gap-2">
+                      <span className="grid h-6 w-6 place-items-center rounded-full border border-glow/50 font-display text-[0.8rem] text-brass">{index + 1}</span>
+                      {step}
+                    </span>
+                  </li>
+                ))}
+              </ol>
             </div>
-          </header>
-        ) : null}
+
+            <div className="mt-9 grid gap-5 md:mt-10 md:grid-cols-2 md:gap-7">
+              {choices.map((choice) => (
+                <section key={choice.id} aria-labelledby={`${choice.id}-title`} className="group/card flex flex-col overflow-hidden rounded-t-[220px] rounded-b-[20px] border border-line bg-panel transition hover:border-glow/40 max-sm:rounded-t-[160px]">
+                  <div className="relative aspect-[16/11] overflow-hidden md:aspect-[16/8.5]">
+                    <CmsImage src={choice.image} alt={choice.alt} fill sizes="(min-width: 768px) 560px, 100vw" className={`object-cover ${choice.position} transition-transform duration-700 group-hover/card:scale-[1.03]`} />
+                    <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-panel via-panel/60 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 px-6 pb-4 md:px-8">
+                      <p className="text-[0.85rem] tracking-[0.04em] text-brass">{choice.side}</p>
+                      <h2 id={`${choice.id}-title`} className="font-display text-[clamp(2.3rem,5vw,3rem)] font-normal leading-none">{choice.title}</h2>
+                    </div>
+                  </div>
+                  <div className="flex flex-1 flex-col px-6 pb-7 pt-3 md:px-8 md:pb-8">
+                    <p className="text-haze">{choice.text}</p>
+                    <Link href={choice.cta.href} className={`${BTN_GLOW} mt-6 min-h-12 w-full text-[1rem]`}>
+                      {choice.cta.label} <ArrowRight className="h-4 w-4 transition-transform group-hover/card:translate-x-0.5" aria-hidden="true" />
+                    </Link>
+                    <ul className="mt-5 flex flex-wrap gap-2 border-t border-line pt-5" aria-label={choice.chipsLabel}>
+                      {choice.chips.map((chip) => (
+                        <li key={chip.label}><Link href={chip.href} className={CHIP}>{chip.label}</Link></li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <nav aria-label="More ways to book" className="mt-5 grid gap-3 sm:grid-cols-3 md:mt-7">
+              {[
+                { href: '/services', Icon: ListChecks, title: 'All services', text: 'Full price list', external: false },
+                { href: '/packages', Icon: Gift, title: 'Packages', text: 'Several services, one price', external: false },
+                { href: homeServiceUrl, Icon: House, title: 'Home service', text: 'We come to you. Ask on WhatsApp', external: true },
+              ].map(({ href, Icon, title, text, external }) => (
+                <Link key={title} href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className={TILE}>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-glow/10 text-glow"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                  <span className="min-w-0 flex-1">
+                    <b className="block font-medium">{title}</b>
+                    <span className="block text-sm text-haze">{text}</span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-haze transition group-hover:translate-x-0.5 group-hover:text-glow" aria-hidden="true" />
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </header>
 
         <div className="border-y border-line bg-panel">
           <dl className="mx-auto grid max-w-[1180px] gap-x-10 gap-y-5 px-4 py-6 sm:px-6 md:grid-cols-3 lg:px-10">

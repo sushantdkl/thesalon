@@ -9,6 +9,7 @@ import { createWhatsAppLink } from '../utils/whatsapp';
 
 const baseNavLinks = [
   ['Home', '/'],
+  ["Men's services", '/men'],
   ["Women's services", '/women'],
   ['All services', '/services'],
   ['Packages', '/packages'],
@@ -80,8 +81,8 @@ export function PublicLayout({
   ].filter(([, href]) => href) as Array<[string, string]>;
 
   return (
-    <div className="salon-site min-h-screen bg-night font-jost text-[1.0625rem] leading-relaxed text-plaster antialiased [color-scheme:dark]">
-      <header className="sticky top-0 z-40 border-b border-line bg-night/90 backdrop-blur-md">
+    <div className="salon-site min-h-screen bg-night font-jost [-webkit-tap-highlight-color:transparent] [text-size-adjust:100%] text-[1.0625rem] leading-relaxed text-plaster antialiased [color-scheme:dark]">
+      <header className="sticky top-0 z-40 border-b border-line bg-night/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
           <Link href="/" aria-label={`${info.name}, home`} className="text-lg text-plaster no-underline">
             <Wordmark />

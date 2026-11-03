@@ -17,7 +17,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'haircut-styling',
     name: 'Haircut & styling',
     summary: 'Layers, fringes, trims and blow-dry finishes.',
-    image: '/img/balayage.jpg',
+    image: '/img/studio/womens-cut-closeup.jpg',
     items: [
       { name: 'Trim', detail: 'Clean up split ends and keep your length.', book: 'trim' },
       { name: 'Layer cut', detail: 'Movement and volume for long or medium hair.', book: 'layer' },
@@ -30,7 +30,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'hair-colour',
     name: 'Hair colour',
     summary: 'Global colour, highlights, balayage and root touch-ups.',
-    image: '/img/colours.jpg',
+    image: '/img/studio/womens-cut-detail.jpg',
     items: [
       { name: 'Root touch-up', detail: 'Cover grey or regrowth at the roots.', book: 'root' },
       { name: 'Global colour', detail: 'One even shade from root to tip.', book: 'global' },
@@ -43,7 +43,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'keratin-smoothing',
     name: 'Keratin & smoothing',
     summary: 'Frizz-free, shiny hair that lasts for months.',
-    image: '/img/dryer.jpg',
+    image: '/img/studio/hair-straightening.jpg',
     items: [
       { name: 'Keratin treatment', detail: 'Softer, frizz-free hair, natural movement.', book: 'keratin' },
       { name: 'Smoothing', detail: 'Straighter, sleeker hair with less daily styling.', book: 'smooth' },
@@ -55,7 +55,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'hair-spa',
     name: 'Hair spa & treatment',
     summary: 'Deep care for dry, coloured or falling hair.',
-    image: '/img/porthole.jpg',
+    image: '/img/studio/hair-wash.jpg',
     items: [
       { name: 'Hair spa', detail: 'Deep conditioning with a relaxing massage.', book: 'spa' },
       { name: 'Hair fall treatment', detail: 'Scalp care to strengthen the roots.', book: 'hair fall' },
@@ -67,7 +67,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'nails',
     name: 'Nails',
     summary: 'Manicure, pedicure, gel polish and nail art.',
-    image: '/img/trolley.jpg',
+    image: '/img/studio/nail-art.jpg',
     items: [
       { name: 'Manicure', detail: 'Shape, cuticle care and polish.', book: 'manicure' },
       { name: 'Pedicure', detail: 'Soak, scrub, nail care and polish.', book: 'pedicure' },
@@ -80,7 +80,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'facial-skin',
     name: 'Facial & skin',
     summary: 'Clean-ups, facials, bleach and de-tan.',
-    image: '/img/lamps.jpg',
+    image: '/img/studio/head-wash.jpg',
     items: [
       { name: 'Clean-up', detail: 'Quick cleanse, scrub and mask.', book: 'clean' },
       { name: 'Facial', detail: 'Full facial with massage, for a fresh glow.', book: 'facial' },
@@ -92,7 +92,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'waxing-threading',
     name: 'Waxing & threading',
     summary: 'Eyebrows, upper lip, arms, legs and full body.',
-    image: '/img/scissors.jpg',
+    image: '/img/studio/round-mirrors.jpg',
     items: [
       { name: 'Eyebrow threading', detail: 'Neat, shaped brows in minutes.', book: 'eyebrow' },
       { name: 'Upper lip / face', detail: 'Threading or wax for the face.', book: 'lip' },
@@ -105,7 +105,7 @@ export const womenServices: WomenServiceCategory[] = [
     slug: 'makeup-bridal',
     name: 'Makeup & bridal',
     summary: 'Party glam, engagement, bridal and saree draping.',
-    image: '/img/card.jpg',
+    image: '/img/studio/lash-extensions.jpg',
     items: [
       { name: 'Party makeup', detail: 'Soft glam to full evening looks.', book: 'party' },
       { name: 'Engagement makeup', detail: 'Makeup and hairstyling for the day.', book: 'engagement' },

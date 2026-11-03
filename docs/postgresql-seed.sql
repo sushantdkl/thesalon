@@ -18,28 +18,38 @@ VALUES
   ('Other', 8)
 ON CONFLICT (name) DO NOTHING;
 
--- Launch services and packages
+-- Launch services: the men's rate card (packages are created by the owner)
 INSERT INTO salon_services (name, category, price, duration_minutes, description, is_package, package_items, is_active)
 VALUES
-  ('Hair Cut', 'Haircut', 150, 30, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Haircut + Wash', 'Haircut', 200, 30, 'Haircut with hair wash.', FALSE, NULL, TRUE),
-  ('Hair Wash', 'Treatment', 50, 15, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Shaving', 'Beard', 100, 20, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Head Massage', 'Spa', 200, 20, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Threading', 'Facial', 50, 15, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Normal Cleansing', 'Facial', 500, 35, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Deep Cleansing', 'Facial', 800, 45, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Wine Facial', 'Facial', 1200, 60, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Fruit Facial', 'Facial', 1500, 60, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Lotus Facial', 'Facial', 1800, 60, 'Client rate card service', FALSE, NULL, TRUE),
-  ('Hair Colouring', 'Hair Color', 500, 75, 'Starting from NPR 500+', FALSE, NULL, TRUE),
-  ('Cap Highlight', 'Hair Color', 1000, 90, 'Starting from NPR 1000+', FALSE, NULL, TRUE),
-  ('Hair Straight', 'Treatment', 1200, 90, 'Starting from NPR 1200+', FALSE, NULL, TRUE),
-  ('Keratin', 'Treatment', 1500, 120, 'Starting from NPR 1500+', FALSE, NULL, TRUE),
-  ('Piece Highlight', 'Hair Color', 200, 20, 'NPR 200 per piece', FALSE, NULL, TRUE),
-  ('Silver Package', 'Other', 650, 80, 'Includes Hair Cut, Hair Wash, Shaving, Normal Cleansing', TRUE, 'Hair Cut,Hair Wash,Shaving,Normal Cleansing', TRUE),
-  ('Gold Package', 'Other', 850, 90, 'Includes Hair Cut, Hair Wash, Shaving, Deep Cleansing', TRUE, 'Hair Cut,Hair Wash,Shaving,Deep Cleansing', TRUE),
-  ('Platinum Package', 'Other', 1450, 120, 'Includes Hair Cut, Hair Wash, Shaving, Head Massage, Facial', TRUE, 'Hair Cut,Hair Wash,Shaving,Head Massage,Facial', TRUE);
+  ('Hair Cut', 'Haircut', 300, 30, 'Rate card service', FALSE, NULL, TRUE),
+  ('Hair Wash', 'Treatment', 50, 15, 'Rate card service', FALSE, NULL, TRUE),
+  ('Head Massage', 'Spa', 300, 20, 'Rs 300 / Rs 600', FALSE, NULL, TRUE),
+  ('Beard', 'Beard', 150, 15, 'Rate card service', FALSE, NULL, TRUE),
+  ('Shaving', 'Beard', 100, 20, 'Rate card service', FALSE, NULL, TRUE),
+  ('Threading', 'Facial', 70, 15, 'Rate card service', FALSE, NULL, TRUE),
+  ('Normal Cleansing', 'Facial', 700, 35, 'Rate card service', FALSE, NULL, TRUE),
+  ('Deep Cleansing', 'Facial', 1000, 45, 'Rate card service', FALSE, NULL, TRUE),
+  ('Wine Facial', 'Facial', 1300, 60, 'Rate card service', FALSE, NULL, TRUE),
+  ('Fruits Facial', 'Facial', 1800, 60, 'Rate card service', FALSE, NULL, TRUE),
+  ('Lotus Facial', 'Facial', 2000, 60, 'Rate card service', FALSE, NULL, TRUE),
+  ('Anti Aging Facial', 'Facial', 2500, 60, 'Rate card service', FALSE, NULL, TRUE),
+  ('Dr. Rashel Facial', 'Facial', 3000, 60, 'Rate card service', FALSE, NULL, TRUE),
+  ('VLCC Facial', 'Facial', 3500, 60, 'Rate card service', FALSE, NULL, TRUE),
+  ('Nature''s Facial', 'Facial', 3800, 60, 'Rate card service', FALSE, NULL, TRUE),
+  ('Black Color', 'Hair Color', 700, 45, 'Rate card service', FALSE, NULL, TRUE),
+  ('Global Hair Color', 'Hair Color', 1500, 90, 'Starting from Rs 1500', FALSE, NULL, TRUE),
+  ('Cap Highlight', 'Hair Color', 2000, 90, 'Starting from Rs 2000', FALSE, NULL, TRUE),
+  ('Ash Color', 'Hair Color', 3000, 120, 'Starting from Rs 3000', FALSE, NULL, TRUE),
+  ('Temporary Straight', 'Treatment', 500, 30, 'Rate card service', FALSE, NULL, TRUE),
+  ('Temporary Curl', 'Treatment', 500, 30, 'Rate card service', FALSE, NULL, TRUE),
+  ('Permanent Straight', 'Treatment', 2000, 180, 'Starting from Rs 2000', FALSE, NULL, TRUE),
+  ('Keratin Straight', 'Treatment', 2500, 180, 'Starting from Rs 2500', FALSE, NULL, TRUE),
+  ('Keratin', 'Treatment', 3000, 120, 'Starting from Rs 3000', FALSE, NULL, TRUE),
+  ('Permanent Hair Perming', 'Treatment', 4000, 180, 'Starting from Rs 4000', FALSE, NULL, TRUE),
+  ('Braids Styling', 'Other', 1000, 45, 'Starting from Rs 1000', FALSE, NULL, TRUE),
+  ('Hair Spa', 'Spa', 1500, 60, 'Starting from Rs 1500', FALSE, NULL, TRUE),
+  ('Manicure', 'Other', 1000, 45, 'Starting from Rs 1000', FALSE, NULL, TRUE),
+  ('Pedicure', 'Other', 2000, 60, 'Starting from Rs 2000', FALSE, NULL, TRUE);
 
 -- Inventory products
 INSERT INTO salon_products (name, category, purchase_price, selling_price, current_stock, low_stock_threshold, supplier, status)
@@ -109,7 +119,7 @@ INSERT INTO website_content (
     'The Salon',
     'For men and women in Birendranagar, Surkhet',
     'Sharp fades, soft layers, rich colour and party-ready makeup, done under warm light in Surkhet''s most relaxed chair.',
-    '/img/balayage.jpg',
+    '/img/studio/womens-cut-mirror.jpg',
     'Book a visit',
     '/book-appointment',
     'WhatsApp',
@@ -123,21 +133,21 @@ INSERT INTO website_content (
     'Colour, matched to you',
     'Colour',
     'We start every colour with the shade chart in your hand, under daylight-white lamps. Pick a level, we check it against your base and skin tone, and then we mix.',
-    '/img/colours.jpg',
+    '/img/studio/womens-cut-detail.jpg',
     '',
     '',
     '',
     '',
     TRUE,
     2,
-    '{"highlights": ["Shade chart in your hand", "Daylight-white lamps", "Mixed for your skin tone"], "galleryImages": ["/img/colours.jpg", "/img/card.jpg"]}'
+    '{"highlights": ["Shade chart in your hand", "Daylight-white lamps", "Mixed for your skin tone"], "galleryImages": ["/img/studio/womens-cut-detail.jpg", "/img/studio/storefront.jpg"]}'
   ),
   (
     'services',
     'Services',
     'Services',
     'One studio, two sides of the floor. Tell us what you want when you book and we will plan the time you need.',
-    '/img/clipper.jpg',
+    '/img/studio/mens-cut-mirror.jpg',
     '',
     '',
     '',
@@ -206,14 +216,14 @@ INSERT INTO website_content (
 -- Gallery images
 INSERT INTO website_gallery_images (image_url, title, alt_text, category, description, sort_order, is_visible)
 VALUES
-  ('/img/porthole.jpg', 'Fade in progress', 'A stylist trimming a client''s hair, seen through a round opening', 'Studio', 'A stylist trimming a client''s hair, seen through a round opening', 1, TRUE),
-  ('/img/dryer.jpg', 'Pro tools', 'Close-up of a professional hair dryer nozzle', 'Studio', 'Close-up of a professional hair dryer nozzle', 2, TRUE),
-  ('/img/clipper.jpg', 'Precision clipper work', 'Precision clipper blade in front of a client''s freshly cut hair in the mirror', 'Services', 'Precision clipper blade in front of a client''s freshly cut hair in the mirror', 3, TRUE),
-  ('/img/lamps.jpg', 'The lamps', 'Perforated brass pendant lamps glowing over the salon floor', 'Studio', 'Perforated brass pendant lamps glowing over the salon floor', 4, TRUE),
-  ('/img/trolley.jpg', 'Glam kit', 'Black and silver makeup trolley case at the reception', 'Glam', 'Black and silver makeup trolley case at the reception', 5, TRUE),
-  ('/img/balayage.jpg', 'Soft balayage', 'Long layered cut with soft brown balayage, styled at The Salon', 'Colour', 'Long layered cut with soft brown balayage, styled at The Salon', 6, TRUE),
-  ('/img/colours.jpg', 'Colour chart', 'Hair colour swatch chart from light blonde to dark brown', 'Colour', 'Hair colour swatch chart from light blonde to dark brown', 7, TRUE),
-  ('/img/scissors.jpg', 'Gold scissors', 'Gold styling scissors in front of the salon''s round mirrors', 'Studio', 'Gold styling scissors in front of the salon''s round mirrors', 8, TRUE);
+  ('/img/studio/mens-cut-mirror.jpg', 'Men''s haircut', 'Stylist cutting a man''s hair, reflected in the round mirror', 'Men', 'Stylist cutting a man''s hair, reflected in the round mirror', 1, TRUE),
+  ('/img/studio/womens-cut-mirror.jpg', 'Women''s haircut', 'Stylist cutting a woman''s hair at the round mirror', 'Women', 'Stylist cutting a woman''s hair at the round mirror', 2, TRUE),
+  ('/img/studio/round-mirrors.jpg', 'Round mirrors', 'Backlit round mirrors and styling chairs under pendant lamps', 'Studio', 'Backlit round mirrors and styling chairs under pendant lamps', 3, TRUE),
+  ('/img/studio/lash-extensions.jpg', 'Lash extensions', 'Lash extensions being applied with tweezers', 'Nails & glam', 'Lash extensions being applied with tweezers', 4, TRUE),
+  ('/img/studio/hair-straightening.jpg', 'Straightening', 'Stylist straightening a short bob with a flat iron', 'Women', 'Stylist straightening a short bob with a flat iron', 5, TRUE),
+  ('/img/studio/mens-cut-scissors.jpg', 'Scissor cut', 'Scissor cut on a man''s longer hair', 'Men', 'Scissor cut on a man''s longer hair', 6, TRUE),
+  ('/img/studio/womens-cut-detail.jpg', 'Finishing the ends', 'Point cutting the ends of long hair', 'Women', 'Point cutting the ends of long hair', 7, TRUE),
+  ('/img/studio/styling-stations.jpg', 'Styling stations', 'Styling stations with trolleys, mirrors and product shelves', 'Studio', 'Styling stations with trolleys, mirrors and product shelves', 8, TRUE);
 
 -- System settings defaults
 INSERT INTO system_settings (setting_key, setting_value)

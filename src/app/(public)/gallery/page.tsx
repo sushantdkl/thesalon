@@ -4,6 +4,7 @@ import { PageHero } from '@/modules/public-site/components/page-hero';
 import { Section } from '@/modules/public-site/components/section';
 import { CmsImage } from '@/modules/public-site/components/cms-image';
 import { getSiteContext, staticPageMetadata } from '@/modules/public-site/services/seo';
+import { studioPhotos } from '@/modules/public-site/data/studio-photos';
 import type { GalleryItem } from '@/modules/public-site/types';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,11 @@ export async function generateMetadata() {
 export default async function GalleryPage() {
   const context = await getSiteContext();
   const { cms } = context;
+  // Our own shoot first, then anything uploaded in Website CMS → Gallery. /assets/* rows are
+  // photos from before the rebrand whose files no longer exist, so they are never shown.
+  const shoot: GalleryItem[] = studioPhotos.map((photo) => ({ title: photo.title, description: '', image: photo.src, altText: photo.alt, category: photo.category }));
+  const uploads = cms.gallery.filter((item: GalleryItem) => item.image && !item.image.startsWith('/assets/') && !studioPhotos.some((photo) => photo.src === item.image));
+  const items = [...shoot, ...uploads];
   return (
     <SiteShell>
       <PageHero
@@ -26,7 +32,7 @@ export default async function GalleryPage() {
       />
       <Section hideHeader className="!py-10 md:!py-14">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {cms.gallery.map((item: GalleryItem) => (
+          {items.map((item: GalleryItem) => (
             <article
               key={`${item.id || item.title}-${item.image}`}
               className="group overflow-hidden border border-line bg-panel transition-shadow duration-300 hover:shadow-md"
@@ -45,7 +51,7 @@ export default async function GalleryPage() {
                   {item.category || 'Salon'}
                 </p>
                 <h3 className="mt-2 font-display text-xl font-light text-plaster">{item.title}</h3>
-                <p className="mt-2 text-sm font-light leading-relaxed text-haze">{item.description}</p>
+                {item.description ? <p className="mt-2 text-sm font-light leading-relaxed text-haze">{item.description}</p> : null}
               </div>
             </article>
           ))}

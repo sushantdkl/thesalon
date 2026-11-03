@@ -22,7 +22,7 @@ export default function WomenServicesPage() {
         eyebrow="For her"
         title="Women's services"
         description="Tap a service to book it, or open a category for details and prices."
-        imageUrl="/img/balayage.jpg"
+        imageUrl="/img/studio/womens-cut-detail.jpg"
       />
       <Section hideHeader className="!py-10 md:!py-14">
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

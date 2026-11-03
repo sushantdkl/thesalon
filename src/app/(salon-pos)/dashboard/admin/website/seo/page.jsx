@@ -361,7 +361,7 @@ function ServicePageEditor({ data, initial, onCancel, onSave, saving }) {
       </fieldset>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <Field label="Photo URL" hint="Your own photo only. Use a descriptive file name, e.g. balayage-colour-the-salon-surkhet.webp"><Text value={form.image} onChange={set('image')} placeholder="/img/porthole.jpg" /></Field>
+        <Field label="Photo URL" hint="Your own photo only. Use a descriptive file name, e.g. balayage-colour-the-salon-surkhet.webp"><Text value={form.image} onChange={set('image')} placeholder="/img/studio/mens-cut-scissors.jpg" /></Field>
         <Field label="Photo description (alt text)" hint={'Describe the photo, e.g. "Men\'s fade haircut at The Salon in Birendranagar". Required to show the photo.'}><Text value={form.imageAlt} onChange={set('imageAlt')} /></Field>
       </div>
 

@@ -112,7 +112,7 @@ const SALARY_PAYMENT_COLUMNS = [
 ];
 
 const BARBER_SERVICES = 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading';
-const BEAUTY_SERVICES = 'Normal Cleansing,Deep Cleansing,Wine Facial,Fruit Facial,Lotus Facial,Threading';
+const BEAUTY_SERVICES = 'Normal Cleansing,Deep Cleansing,Wine Facial,Fruits Facial,Lotus Facial,Threading';
 
 const LAUNCH_STAFF = [
   {
@@ -168,24 +168,35 @@ const LAUNCH_STAFF = [
 ];
 
 const LAUNCH_SERVICES = [
-  ['Hair Cut', 'Haircut', 150, 30, 'Client rate card service', 0, ''],
-  ['Hair Wash', 'Treatment', 50, 15, 'Client rate card service', 0, ''],
-  ['Shaving', 'Beard', 100, 20, 'Client rate card service', 0, ''],
-  ['Head Massage', 'Spa', 200, 20, 'Client rate card service', 0, ''],
-  ['Threading', 'Facial', 50, 15, 'Client rate card service', 0, ''],
-  ['Normal Cleansing', 'Facial', 500, 35, 'Client rate card service', 0, ''],
-  ['Deep Cleansing', 'Facial', 800, 45, 'Client rate card service', 0, ''],
-  ['Wine Facial', 'Facial', 1200, 60, 'Client rate card service', 0, ''],
-  ['Fruit Facial', 'Facial', 1500, 60, 'Client rate card service', 0, ''],
-  ['Lotus Facial', 'Facial', 1800, 60, 'Client rate card service', 0, ''],
-  ['Hair Colouring', 'Hair Color', 500, 75, 'Starting from NPR 500+', 0, ''],
-  ['Cap Highlight', 'Hair Color', 1000, 90, 'Starting from NPR 1000+', 0, ''],
-  ['Hair Straight', 'Treatment', 1200, 90, 'Starting from NPR 1200+', 0, ''],
-  ['Keratin', 'Treatment', 1500, 120, 'Starting from NPR 1500+', 0, ''],
-  ['Piece Highlight', 'Hair Color', 200, 20, 'NPR 200 per piece', 0, ''],
-  ['Silver Package', 'Other', 650, 80, 'Includes Hair Cut, Hair Wash, Shaving, Normal Cleansing', 1, 'Hair Cut,Hair Wash,Shaving,Normal Cleansing'],
-  ['Gold Package', 'Other', 850, 90, 'Includes Hair Cut, Hair Wash, Shaving, Deep Cleansing', 1, 'Hair Cut,Hair Wash,Shaving,Deep Cleansing'],
-  ['Platinum Package', 'Other', 1450, 120, 'Includes Hair Cut, Hair Wash, Shaving, Head Massage, Facial', 1, 'Hair Cut,Hair Wash,Shaving,Head Massage,Facial'],
+  ['Hair Cut', 'Haircut', 300, 30, 'Rate card service', 0, ''],
+  ['Hair Wash', 'Treatment', 50, 15, 'Rate card service', 0, ''],
+  ['Head Massage', 'Spa', 300, 20, 'Rs 300 / Rs 600', 0, ''],
+  ['Beard', 'Beard', 150, 15, 'Rate card service', 0, ''],
+  ['Shaving', 'Beard', 100, 20, 'Rate card service', 0, ''],
+  ['Threading', 'Facial', 70, 15, 'Rate card service', 0, ''],
+  ['Normal Cleansing', 'Facial', 700, 35, 'Rate card service', 0, ''],
+  ['Deep Cleansing', 'Facial', 1000, 45, 'Rate card service', 0, ''],
+  ['Wine Facial', 'Facial', 1300, 60, 'Rate card service', 0, ''],
+  ['Fruits Facial', 'Facial', 1800, 60, 'Rate card service', 0, ''],
+  ['Lotus Facial', 'Facial', 2000, 60, 'Rate card service', 0, ''],
+  ['Anti Aging Facial', 'Facial', 2500, 60, 'Rate card service', 0, ''],
+  ['Dr. Rashel Facial', 'Facial', 3000, 60, 'Rate card service', 0, ''],
+  ['VLCC Facial', 'Facial', 3500, 60, 'Rate card service', 0, ''],
+  ["Nature's Facial", 'Facial', 3800, 60, 'Rate card service', 0, ''],
+  ['Black Color', 'Hair Color', 700, 45, 'Rate card service', 0, ''],
+  ['Global Hair Color', 'Hair Color', 1500, 90, 'Starting from Rs 1500', 0, ''],
+  ['Cap Highlight', 'Hair Color', 2000, 90, 'Starting from Rs 2000', 0, ''],
+  ['Ash Color', 'Hair Color', 3000, 120, 'Starting from Rs 3000', 0, ''],
+  ['Temporary Straight', 'Treatment', 500, 30, 'Rate card service', 0, ''],
+  ['Temporary Curl', 'Treatment', 500, 30, 'Rate card service', 0, ''],
+  ['Permanent Straight', 'Treatment', 2000, 180, 'Starting from Rs 2000', 0, ''],
+  ['Keratin Straight', 'Treatment', 2500, 180, 'Starting from Rs 2500', 0, ''],
+  ['Keratin', 'Treatment', 3000, 120, 'Starting from Rs 3000', 0, ''],
+  ['Permanent Hair Perming', 'Treatment', 4000, 180, 'Starting from Rs 4000', 0, ''],
+  ['Braids Styling', 'Other', 1000, 45, 'Starting from Rs 1000', 0, ''],
+  ['Hair Spa', 'Spa', 1500, 60, 'Starting from Rs 1500', 0, ''],
+  ['Manicure', 'Other', 1000, 45, 'Starting from Rs 1000', 0, ''],
+  ['Pedicure', 'Other', 2000, 60, 'Starting from Rs 2000', 0, ''],
 ];
 
 function columnExists(db, table, column) {
@@ -230,7 +241,7 @@ function seedSalonData(db) {
   db.prepare(`
     UPDATE salon_services
     SET is_active = 0, updated_at = CURRENT_TIMESTAMP
-    WHERE name IN ('Classic Haircut', 'Beard Trim', 'Hair Color', 'Deep Facial', 'Hair Spa')
+    WHERE name IN ('Classic Haircut', 'Beard Trim', 'Hair Color', 'Deep Facial')
   `).run();
 
   const productCount = db.prepare('SELECT COUNT(*) as count FROM salon_products').get().count;
@@ -309,7 +320,7 @@ function seedWebsiteCmsData(db) {
         "The Salon",
         "For men and women in Birendranagar, Surkhet",
         "Sharp fades, soft layers, rich colour and party-ready makeup, done under warm light in Surkhet's most relaxed chair.",
-        "/img/balayage.jpg",
+        "/img/studio/womens-cut-mirror.jpg",
         "Book a visit",
         "/book-appointment",
         "WhatsApp",
@@ -323,21 +334,21 @@ function seedWebsiteCmsData(db) {
         "Colour, matched to you",
         "Colour",
         "We start every colour with the shade chart in your hand, under daylight-white lamps. Pick a level, we check it against your base and skin tone, and then we mix.",
-        "/img/colours.jpg",
+        "/img/studio/womens-cut-detail.jpg",
         "",
         "",
         "",
         "",
         1,
         2,
-        JSON.stringify({"highlights": ["Shade chart in your hand", "Daylight-white lamps", "Mixed for your skin tone"], "galleryImages": ["/img/colours.jpg", "/img/card.jpg"]})
+        JSON.stringify({"highlights": ["Shade chart in your hand", "Daylight-white lamps", "Mixed for your skin tone"], "galleryImages": ["/img/studio/womens-cut-detail.jpg", "/img/studio/storefront.jpg"]})
       ],
       [
         "services",
         "Services",
         "Services",
         "One studio, two sides of the floor. Tell us what you want when you book and we will plan the time you need.",
-        "/img/clipper.jpg",
+        "/img/studio/mens-cut-mirror.jpg",
         "",
         "",
         "",
@@ -412,14 +423,14 @@ function seedWebsiteCmsData(db) {
       VALUES (?, ?, ?, ?, ?, ?, 1)
     `);
     [
-      ["/img/porthole.jpg", "Fade in progress", "A stylist trimming a client's hair, seen through a round opening", "Studio", "A stylist trimming a client's hair, seen through a round opening"],
-      ["/img/dryer.jpg", "Pro tools", "Close-up of a professional hair dryer nozzle", "Studio", "Close-up of a professional hair dryer nozzle"],
-      ["/img/clipper.jpg", "Precision clipper work", "Precision clipper blade in front of a client's freshly cut hair in the mirror", "Services", "Precision clipper blade in front of a client's freshly cut hair in the mirror"],
-      ["/img/lamps.jpg", "The lamps", "Perforated brass pendant lamps glowing over the salon floor", "Studio", "Perforated brass pendant lamps glowing over the salon floor"],
-      ["/img/trolley.jpg", "Glam kit", "Black and silver makeup trolley case at the reception", "Glam", "Black and silver makeup trolley case at the reception"],
-      ["/img/balayage.jpg", "Soft balayage", "Long layered cut with soft brown balayage, styled at The Salon", "Colour", "Long layered cut with soft brown balayage, styled at The Salon"],
-      ["/img/colours.jpg", "Colour chart", "Hair colour swatch chart from light blonde to dark brown", "Colour", "Hair colour swatch chart from light blonde to dark brown"],
-      ["/img/scissors.jpg", "Gold scissors", "Gold styling scissors in front of the salon's round mirrors", "Studio", "Gold styling scissors in front of the salon's round mirrors"]
+      ["/img/studio/mens-cut-mirror.jpg", "Men's haircut", "Stylist cutting a man's hair, reflected in the round mirror", "Men", "Stylist cutting a man's hair, reflected in the round mirror"],
+      ["/img/studio/womens-cut-mirror.jpg", "Women's haircut", "Stylist cutting a woman's hair at the round mirror", "Women", "Stylist cutting a woman's hair at the round mirror"],
+      ["/img/studio/round-mirrors.jpg", "Round mirrors", "Backlit round mirrors and styling chairs under pendant lamps", "Studio", "Backlit round mirrors and styling chairs under pendant lamps"],
+      ["/img/studio/lash-extensions.jpg", "Lash extensions", "Lash extensions being applied with tweezers", "Nails & glam", "Lash extensions being applied with tweezers"],
+      ["/img/studio/hair-straightening.jpg", "Straightening", "Stylist straightening a short bob with a flat iron", "Women", "Stylist straightening a short bob with a flat iron"],
+      ["/img/studio/mens-cut-scissors.jpg", "Scissor cut", "Scissor cut on a man's longer hair", "Men", "Scissor cut on a man's longer hair"],
+      ["/img/studio/womens-cut-detail.jpg", "Finishing the ends", "Point cutting the ends of long hair", "Women", "Point cutting the ends of long hair"],
+      ["/img/studio/styling-stations.jpg", "Styling stations", "Styling stations with trolleys, mirrors and product shelves", "Studio", "Styling stations with trolleys, mirrors and product shelves"]
     ].forEach((row, index) => insertGallery.run(...row, index + 1));
   }
 

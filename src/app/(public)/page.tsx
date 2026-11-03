@@ -9,7 +9,10 @@ import { CmsImage } from '@/modules/public-site/components/cms-image';
 import { getSiteContext, staticPageMetadata } from '@/modules/public-site/services/seo';
 import { createWhatsAppLink } from '@/modules/public-site/utils/whatsapp';
 import { bookingHref, womenServices } from '@/modules/public-site/data/women-services';
-import type { GalleryItem, PublicPackage, ServicePage } from '@/modules/public-site/types';
+import { studio } from '@/modules/public-site/data/studio-photos';
+import { menServices } from '@/modules/public-site/data/men-services';
+import { HeroMenu, type HeroMenuTab } from '@/modules/public-site/components/hero-menu';
+import type { PublicPackage, ServicePage } from '@/modules/public-site/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,11 +26,11 @@ const SERVICE_MENU = [
     title: 'For him',
     side: 'Barber chair',
     items: [
-      ['Haircut and styling', 'Classic, textured or modern crops, finished with product.'],
-      ['Skin fade and taper', 'Clean clipper work, blended to the skin.'],
-      ['Beard trim and shape', 'Line-up, shaping and hot towel finish.'],
-      ['Hair colour', 'Grey coverage, global colour and fashion streaks.'],
-      ['Facial and head massage', 'A cleanse and a reset after a long week.'],
+      ['Hair Cut', 'Rs 300. Hair wash Rs 50, head massage Rs 300 / 600.'],
+      ['Beard, shaving and threading', 'Beard Rs 150, shaving Rs 100, threading Rs 70.'],
+      ['Cleansing and facial', 'From normal cleansing at Rs 700 to Nature’s Facial at Rs 3,800.'],
+      ['Hair colour', 'Black colour Rs 700. Global, cap highlight and ash from Rs 1,500.'],
+      ['Straightening and keratin', 'Temporary straight or curl Rs 500. Keratin from Rs 2,500.'],
     ],
   },
   {
@@ -66,18 +69,12 @@ const SHADES = [
 // Mosaic slots for the first five gallery photos, as in the studio reference layout.
 const MOSAIC = ['row-span-2', 'sm:col-span-2', 'row-span-2', '', ''];
 
-// Men book in one tap: every button here opens the booking form with the service chosen.
-const MEN_QUICK = [
-  ['Beard trim', 'beard'],
-  ['Shave', 'shave'],
-  ['Hair colour', 'colour'],
-  ['Facial', 'facial'],
-] as const;
+// The men's rows on the home menu card, in this order.
+const MEN_SIGNATURE = ['Hair Cut', 'Beard', 'Shaving', 'Normal Cleansing', 'Global Hair Color', 'Keratin'];
 
 const BTN_GLOW = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-glow px-6 py-3.5 text-[0.98rem] font-medium text-cinder transition hover:brightness-110 active:translate-y-px';
 const BTN_LINE = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-plaster/30 px-6 py-3.5 text-[0.98rem] font-medium text-plaster transition hover:border-plaster active:translate-y-px';
-const CHIP = 'inline-flex min-h-10 items-center rounded-full border border-plaster/15 bg-night/40 px-3.5 text-[0.9rem] text-plaster transition hover:border-glow hover:text-glow';
-const TILE = 'group flex min-h-[72px] items-center gap-4 rounded-2xl border border-line bg-panel/80 px-5 py-4 text-plaster no-underline transition hover:-translate-y-0.5 hover:border-glow/60';
+const TILE = 'group flex min-h-[72px] items-center gap-4 rounded-2xl border border-glow/15 bg-panel/70 px-5 py-4 text-plaster no-underline transition hover:-translate-y-0.5 hover:border-glow/60';
 
 export default async function HomePage() {
   const context = await getSiteContext();
@@ -93,103 +90,111 @@ export default async function HomePage() {
   const whatsappUrl = createWhatsAppLink(`Hello ${info.name}, I'd like to book a visit.`, info.whatsappNumber);
   const homeServiceUrl = createWhatsAppLink(`Hello ${info.name}, I'd like to book a home service. Service: , Date: , Address: `, info.whatsappNumber);
   const tel = `tel:${String(info.phone || '').replace(/[^\d+]/g, '')}`;
-  const heroTitle = hero.title || info.name;
-  const gallery: GalleryItem[] = cms.gallery.slice(0, 5);
+  // Our own shoot fills the mosaic; the full set (plus any CMS uploads) is on /gallery.
+  const hasPackages = packagesSection.isVisible && cms.packages.length > 0;
+  const gallery = [studio.roundMirrors, studio.storefront, studio.lashExtensions, studio.nailArt, studio.mensTrim];
   const socials = [
     ['Instagram', info.social.instagram],
     ['Facebook', info.social.facebook],
     ['TikTok', info.social.tiktok],
   ].filter(([, href]) => href) as Array<[string, string]>;
 
-  const choices = [
+  const doors = [
     {
-      id: 'men',
-      title: 'Men',
-      side: 'Barber chair',
-      image: '/img/clipper.jpg',
-      alt: 'Clipper fade in progress at the barber station',
-      position: 'object-center',
-      text: 'Haircut, fade and beard. Pick a time and you are done.',
-      cta: { label: "Book men's haircut", href: bookingHref('haircut', "Men's haircut") },
-      chips: MEN_QUICK.map(([label, keyword]) => ({ label, href: bookingHref(keyword, `Men's ${label.toLowerCase()}`) })),
-      chipsLabel: "Book another men's service",
+      id: 'men', eyebrow: 'For him', title: 'Men', cta: 'Book haircut', ctaShort: 'Book now', aria: "Men: book a men's haircut",
+      href: bookingHref('hair cut', "Men's haircut"),
+      image: studio.mensCutMirror.src, alt: studio.mensCutMirror.alt, position: 'object-[38%_50%]',
     },
     {
-      id: 'women',
-      title: 'Women',
-      side: 'Hair & glam studio',
-      image: '/img/balayage.jpg',
-      alt: 'Long layered cut with soft brown balayage',
-      position: 'object-[50%_30%]',
-      text: 'Hair, colour, keratin, nails, skin and makeup.',
-      cta: { label: "See women's services", href: '/women' },
-      chips: womenServices.slice(0, 4).map((category) => ({ label: category.name, href: `/women/${category.slug}` })),
-      chipsLabel: "Women's service categories",
+      id: 'women', eyebrow: 'For her', title: 'Women', cta: 'Explore menu', ctaShort: 'Explore', aria: "Women: see women's services",
+      href: '/women',
+      image: studio.womensCutMirror.src, alt: studio.womensCutMirror.alt, position: 'object-[30%_50%]',
+    },
+  ];
+
+  // The menu card under the doors: men's rows book straight away, women's rows open the details.
+  const menRows = MEN_SIGNATURE.map((name) => menServices.flatMap((group) => group.items).find((item) => item.name === name))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const menuTabs: HeroMenuTab[] = [
+    {
+      id: 'men', label: 'For him',
+      rows: menRows.map((item) => ({ name: item.name, note: item.price, href: bookingHref(item.book, `Men's ${item.name.toLowerCase()}`), action: 'Book' })),
+      more: { label: "Full men's menu & prices", href: '/men' },
+    },
+    {
+      id: 'women', label: 'For her',
+      rows: womenServices.slice(0, 6).map((category) => ({ name: category.name, note: category.summary, href: `/women/${category.slug}`, action: 'View' })),
+      more: { label: "All women's services", href: '/women' },
     },
   ];
 
   return (
     <SiteShell isHome>
       <main>
-        <header className="relative overflow-hidden">
-          <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[-12%] h-[62%] w-[95%] -translate-x-1/2 bg-[radial-gradient(closest-side,rgb(240_169_75/0.17),transparent)]" />
-          <div className="relative mx-auto max-w-[1180px] px-4 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-12 lg:px-10">
-            <div className="mx-auto max-w-[760px] text-center">
-              <p className="text-[0.95rem] tracking-[0.04em] text-brass">{hero.subtitle || info.tagline}</p>
-              <h1 className="mt-4 text-balance font-display text-[clamp(2.7rem,9vw,5rem)] font-normal leading-[0.96] tracking-[-0.01em]">
-                {heroTitle}
-                {heroTitle === 'The Salon' ? <em className="block text-[0.55em] italic text-brass sm:ml-3 sm:inline">&amp; Glam Studio</em> : null}
-                <span className="mt-5 block font-jost text-[0.8rem] font-medium uppercase tracking-[0.22em] text-haze">
-                  {settings.businessDescriptor}{place ? ` in ${place}` : ''}
+        <header className="relative isolate overflow-hidden">
+          {/* Dimmed studio floor behind everything, warm glow on top: the room at night. */}
+          <div aria-hidden="true" className="absolute inset-0 -z-10">
+            <CmsImage src={studio.studioFloor.src} alt="" fill priority sizes="100vw" className="object-cover opacity-[0.22]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-night/70 via-night/90 to-night" />
+            <div className="absolute inset-x-0 top-[-18%] h-[55%] bg-[radial-gradient(closest-side,rgb(240_169_75/0.2),transparent)]" />
+          </div>
+
+          <div className="mx-auto max-w-[1180px] px-4 pb-12 pt-8 sm:px-6 md:pb-20 md:pt-14 lg:px-10">
+            <div className="text-center">
+              <p className="flex items-center justify-center gap-3 text-[0.66rem] font-medium uppercase tracking-[0.34em] text-brass sm:text-[0.72rem]">
+                <span aria-hidden="true" className="h-px w-7 bg-glow/50 sm:w-12" />
+                Unisex salon
+                <span aria-hidden="true" className="h-px w-7 bg-glow/50 sm:w-12" />
+              </p>
+              <h1 className="mt-4 font-display text-[clamp(2.6rem,12.5vw,5.2rem)] font-normal leading-[0.92] tracking-[-0.015em]">
+                The Salon{' '}
+                <em className="mt-1 block text-[0.5em] italic text-brass sm:mt-0 sm:inline">&amp; Glam Studio</em>
+                <span className="mt-4 block font-jost text-[0.7rem] font-medium uppercase tracking-[0.3em] text-haze sm:text-[0.78rem]">
+                  {place || 'Birendranagar, Surkhet'}
                 </span>
               </h1>
-              <ol className="mx-auto mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[0.92rem] text-haze" aria-label="How booking works">
-                {['Choose a service', 'Pick a free time', 'We confirm'].map((step, index) => (
-                  <li key={step} className="flex items-center gap-3">
-                    {index ? <span aria-hidden="true" className="h-px w-6 bg-line" /> : null}
-                    <span className="flex items-center gap-2">
-                      <span className="grid h-6 w-6 place-items-center rounded-full border border-glow/50 font-display text-[0.8rem] text-brass">{index + 1}</span>
-                      {step}
-                    </span>
-                  </li>
-                ))}
-              </ol>
             </div>
 
-            <div className="mt-9 grid gap-5 md:mt-10 md:grid-cols-2 md:gap-7">
-              {choices.map((choice) => (
-                <section key={choice.id} aria-labelledby={`${choice.id}-title`} className="group/card flex flex-col overflow-hidden rounded-t-[220px] rounded-b-[20px] border border-line bg-panel transition hover:border-glow/40 max-sm:rounded-t-[160px]">
-                  <div className="relative aspect-[16/11] overflow-hidden md:aspect-[16/8.5]">
-                    <CmsImage src={choice.image} alt={choice.alt} fill sizes="(min-width: 768px) 560px, 100vw" className={`object-cover ${choice.position} transition-transform duration-700 group-hover/card:scale-[1.03]`} />
-                    <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-panel via-panel/60 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 px-6 pb-4 md:px-8">
-                      <p className="text-[0.85rem] tracking-[0.04em] text-brass">{choice.side}</p>
-                      <h2 id={`${choice.id}-title`} className="font-display text-[clamp(2.3rem,5vw,3rem)] font-normal leading-none">{choice.title}</h2>
+            <div className="mt-8 grid grid-cols-1 items-start gap-4 sm:gap-6 md:mt-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-8">
+              {/* Both doors side by side, even on the smallest phone: one tap and you are in. */}
+              <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-5">
+                {doors.map((door) => (
+                  <Link key={door.id} href={door.href} aria-label={door.aria} className="group relative isolate block aspect-[3/4.3] overflow-hidden rounded-b-[20px] rounded-t-[999px] border border-glow/30 bg-panel shadow-[0_24px_60px_-28px_rgba(240,169,75,0.45)] sm:aspect-[3/4]">
+                    <CmsImage src={door.image} alt={door.alt} fill priority sizes="(min-width: 1024px) 300px, 50vw" className={`-z-10 object-cover ${door.position} transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none`} />
+                    <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-night/45 to-night/0" />
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-[5px] rounded-b-[16px] rounded-t-[999px] border border-plaster/10" />
+                    <div className="absolute inset-x-0 bottom-0 px-2.5 pb-4 text-center sm:px-5 sm:pb-6">
+                      <p className="text-[0.6rem] font-medium uppercase tracking-[0.32em] text-brass sm:text-[0.68rem]">{door.eyebrow}</p>
+                      <h2 className="mt-1 font-display text-[clamp(1.8rem,9vw,3.4rem)] font-normal leading-none">{door.title}</h2>
+                      <span aria-hidden="true" className="mx-auto my-3 block h-px w-8 bg-glow/60" />
+                      <span className="inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-glow px-4 text-[0.7rem] font-medium uppercase tracking-[0.12em] text-cinder transition group-hover:brightness-110 sm:px-5 sm:text-[0.78rem]">
+                        <span className="sm:hidden">{door.ctaShort}</span><span className="hidden sm:inline">{door.cta}</span> <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex flex-1 flex-col px-6 pb-7 pt-3 md:px-8 md:pb-8">
-                    <p className="text-haze">{choice.text}</p>
-                    <Link href={choice.cta.href} className={`${BTN_GLOW} mt-6 min-h-12 w-full text-[1rem]`}>
-                      {choice.cta.label} <ArrowRight className="h-4 w-4 transition-transform group-hover/card:translate-x-0.5" aria-hidden="true" />
-                    </Link>
-                    <ul className="mt-5 flex flex-wrap gap-2 border-t border-line pt-5" aria-label={choice.chipsLabel}>
-                      {choice.chips.map((chip) => (
-                        <li key={chip.label}><Link href={chip.href} className={CHIP}>{chip.label}</Link></li>
-                      ))}
-                    </ul>
-                  </div>
-                </section>
-              ))}
+                  </Link>
+                ))}
+              </div>
+
+              <HeroMenu tabs={menuTabs} />
             </div>
 
-            <nav aria-label="More ways to book" className="mt-5 grid gap-3 sm:grid-cols-3 md:mt-7">
+            <ol className="mt-7 flex items-center justify-center gap-2.5 text-[0.7rem] uppercase tracking-[0.18em] text-haze sm:gap-4 sm:text-[0.76rem]" aria-label="How booking works">
+              {['Choose', 'Pick a time', 'We confirm'].map((step, index) => (
+                <li key={step} className="flex items-center gap-2.5 sm:gap-4">
+                  {index ? <span aria-hidden="true" className="h-px w-4 bg-glow/40 sm:w-8" /> : null}
+                  <span className="flex items-center gap-1.5"><span className="font-display text-[0.95rem] normal-case tracking-normal text-brass">{index + 1}</span>{step}</span>
+                </li>
+              ))}
+            </ol>
+
+            <nav aria-label="More ways to book" className={`mt-7 grid gap-3 ${hasPackages ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
               {[
                 { href: '/services', Icon: ListChecks, title: 'All services', text: 'Full price list', external: false },
-                { href: '/packages', Icon: Gift, title: 'Packages', text: 'Several services, one price', external: false },
+                ...(hasPackages ? [{ href: '/packages', Icon: Gift, title: 'Packages', text: 'Several services, one price', external: false }] : []),
                 { href: homeServiceUrl, Icon: House, title: 'Home service', text: 'We come to you. Ask on WhatsApp', external: true },
               ].map(({ href, Icon, title, text, external }) => (
                 <Link key={title} href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className={TILE}>
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-glow/10 text-glow"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-glow/30 text-glow"><Icon className="h-5 w-5" aria-hidden="true" /></span>
                   <span className="min-w-0 flex-1">
                     <b className="block font-medium">{title}</b>
                     <span className="block text-sm text-haze">{text}</span>
@@ -259,7 +264,7 @@ export default async function HomePage() {
             <div className="mx-auto grid max-w-[1180px] items-center gap-[clamp(32px,6vw,88px)] px-4 sm:px-6 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:px-10">
               <figure className="relative m-0 aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-t-full rounded-b-lg">
                 <CmsImage
-                  src={colour.imageUrl || colour.metadata.galleryImages?.[0] || info.assets.colour}
+                  src={[colour.imageUrl, colour.metadata.galleryImages?.[0]].find((src) => src && !src.startsWith('/assets/')) || info.assets.colour}
                   alt="Hair colour swatch chart from light blonde to dark brown, with the salon floor behind"
                   fill
                   sizes="(min-width: 768px) 40vw, 100vw"
@@ -306,13 +311,13 @@ export default async function HomePage() {
         ) : null}
 
         {gallery.length ? (
-          <Section id="gallery" title="Inside the studio" description="Round backlit mirrors, brass lamps and cove lights. More of our work is on Instagram at @thesalonsurkhet.">
+          <Section id="gallery" title="Inside the studio" description="Round backlit mirrors, warm cove lights and the work we do under them. More of our work is on Instagram.">
             <div className="grid auto-rows-[260px] grid-cols-1 gap-3.5 sm:auto-rows-[clamp(160px,42vw,240px)] sm:grid-cols-2 lg:auto-rows-[clamp(150px,18vw,230px)] lg:grid-cols-4">
               {gallery.map((item, index) => (
-                <figure key={`${item.image}-${index}`} className={`group relative m-0 overflow-hidden rounded-md bg-panel ${MOSAIC[index] || ''}`}>
+                <figure key={item.src} className={`group relative m-0 overflow-hidden rounded-md bg-panel ${MOSAIC[index] || ''}`}>
                   <CmsImage
-                    src={item.image}
-                    alt={item.altText || item.description || item.title}
+                    src={item.src}
+                    alt={item.alt}
                     fill
                     sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                     className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
@@ -360,11 +365,11 @@ export default async function HomePage() {
                   ))}
                 </div>
               ) : null}
-              <figure className="m-0 mt-9 max-w-[300px]">
-                <div className="relative aspect-[399/501] overflow-hidden rounded-lg shadow-[0_0_50px_rgba(240,169,75,0.15)]">
-                  <CmsImage src={info.assets.details} alt={`${info.name} business card with address and phone number`} fill sizes="300px" className="object-cover" />
+              <figure className="m-0 mt-9 max-w-[440px]">
+                <div className="relative aspect-[3/2] overflow-hidden rounded-lg shadow-[0_0_50px_rgba(240,169,75,0.15)]">
+                  <CmsImage src={studio.storefront.src} alt={studio.storefront.alt} fill sizes="440px" className="object-cover" />
                 </div>
-                <figcaption className="mt-2.5 text-sm text-haze">Our card, in case you want a copy.</figcaption>
+                <figcaption className="mt-2.5 text-sm text-haze">Look for the black The Salon sign{settings.landmark ? `, ${settings.landmark.toLowerCase()}` : ''}.</figcaption>
               </figure>
             </div>
 

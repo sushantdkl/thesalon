@@ -102,7 +102,7 @@ export function BookingForm({
     if (!keyword) return;
     const label = (params.get('label') || '').trim() || keyword;
     setRequested(label);
-    // Closest name wins: "haircut" picks "Haircut" over "Haircut + Wash".
+    // Closest name wins: "keratin" picks "Keratin" over "Keratin Straight".
     const match = (options.services || [])
       .filter((service) => service.name.toLowerCase().includes(keyword))
       .sort((a, b) => Number(b.name.toLowerCase() === keyword) - Number(a.name.toLowerCase() === keyword)

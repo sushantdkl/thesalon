@@ -18,7 +18,7 @@ export default async function sitemap() {
   } catch {
     hasReviews = false;
   }
-  const fixed = ['/', '/services', '/women', ...womenServices.map((item) => `/women/${item.slug}`), '/packages', '/staff', '/gallery', '/contact', '/book-appointment'];
+  const fixed = ['/', '/services', '/men', '/women', ...womenServices.map((item) => `/women/${item.slug}`), '/packages', '/staff', '/gallery', '/contact', '/book-appointment'];
   if (hasReviews) fixed.push('/reviews');
   if (context.articles.length) fixed.push('/guides');
 

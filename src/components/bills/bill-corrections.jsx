@@ -141,6 +141,9 @@ export function ChangePaymentPanel({ billId, actions, payments, onDone, onCancel
 
 export function CancelBillPanel({ billId, bill, payments, actions, onDone, onCancel }) {
   const [reason, setReason] = useState('');
+  const [creditRefundMethod, setCreditRefundMethod] = useState('cash');
+  const owed = actions.creditStillOwed ?? actions.credit;
+  const paidBack = actions.creditPaidBack || 0;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [key] = useState(newKey);
@@ -152,7 +155,7 @@ export function CancelBillPanel({ billId, bill, payments, actions, onDone, onCan
   const submit = async () => {
     setBusy(true); setError('');
     try {
-      await erpFetch(`/api/admin/billing/${billId}/corrections`, { method: 'POST', body: { reason: reason.trim() }, headers: { 'Idempotency-Key': key } });
+      await erpFetch(`/api/admin/billing/${billId}/corrections`, { method: 'POST', body: { reason: reason.trim(), credit_refund_method: creditRefundMethod }, headers: { 'Idempotency-Key': key } });
       onDone('Bill cancelled. The refund, stock and loyalty reversal are recorded.');
     } catch (err) { setError(err.message); setBusy(false); }
   };
@@ -164,7 +167,15 @@ export function CancelBillPanel({ billId, bill, payments, actions, onDone, onCan
         <li>• {money(bill.total)} leaves today&apos;s sales as a void.</li>
         {cash > 0 ? <li>• Give back <b>{money(cash)}</b> cash from the drawer.</li> : null}
         {online > 0 ? <li>• Return <b>{money(online)}</b> online to the customer.</li> : null}
-        {actions.credit > 0 ? <li>• {money(actions.credit)} is removed from the customer&apos;s credit.</li> : null}
+        {owed > 0 ? <li>• {money(owed)} is removed from the customer&apos;s credit.</li> : null}
+        {paidBack > 0 ? (
+          <li className="flex flex-wrap items-center gap-2">• The customer already paid back {money(paidBack)} of this credit — refund it as
+            <select aria-label="Refund paid-back credit as" value={creditRefundMethod} onChange={(event) => setCreditRefundMethod(event.target.value)} className="min-h-8 rounded-md border border-rose-200 bg-white px-2 text-xs font-semibold">
+              <option value="cash">cash from the drawer</option>
+              <option value="online">online / QR</option>
+            </select>
+          </li>
+        ) : null}
         <li>• Products go back to stock; loyalty visits and rewards are reversed.</li>
       </ul>
       {!actions.storeOpen ? <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">Open the store first — the refund is recorded in the open session.</p> : (

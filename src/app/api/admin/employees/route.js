@@ -28,7 +28,7 @@ function validateStaff(data, editing = false) {
   }
   if (!cleanText(data.full_name)) return 'Staff name is required';
   if (!APP_ROLES.includes(normalizeRole(data.salon_role || data.role))) return 'Valid role is required';
-  if (!editing && !/^\d{4,8}$/.test(String(data.password || ''))) return 'PIN must be 4 to 8 digits';
+  if (!editing && !/^\d{6,8}$/.test(String(data.password || ''))) return 'PIN must be 6 to 8 digits';
   if (String(data.phone || '').trim() && !phoneOrNull(data.phone)) return PHONE_ERROR_MESSAGE;
   if (Number(data.commission_percentage || 0) < 0 || Number(data.commission_percentage || 0) > 100) return 'Commission must be between 0 and 100';
   if (Number(data.base_salary || 0) < 0) return 'Base salary cannot be negative';
@@ -248,7 +248,7 @@ export async function PUT(request) {
       let sql = 'UPDATE users SET username = ?, full_name = ?, role = ?, email = ?, phone = ?, is_active = ?, updated_at = NOW()';
       const newPassword = data.password;
       if (newPassword) {
-        if (!/^\d{4,8}$/.test(String(newPassword))) throw adminRuleError('PIN must be 4 to 8 digits');
+        if (!/^\d{6,8}$/.test(String(newPassword))) throw adminRuleError('PIN must be 6 to 8 digits');
         sql += ', password_hash = ?';
         params.push(bcrypt.hashSync(String(newPassword), 10));
       }

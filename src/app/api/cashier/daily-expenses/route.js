@@ -4,7 +4,7 @@ import { PERMISSIONS, requireRoleWithPermission } from '@/lib/auth/permissions';
 import { logAction } from '@/lib/db/helpers';
 import { mapApiError } from '@/lib/db/api-errors';
 import { cleanText, ensureSalonSchema } from '@/lib/salon-schema';
-import { assertDrawerCashAvailable, requireOpenSession } from '@/lib/business-day/service';
+import { assertDrawerCashAvailable, assertSessionOpen, requireOpenSession } from '@/lib/business-day/service';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -168,36 +168,39 @@ export async function POST(request) {
 
     // Cash cannot leave a drawer that does not hold it. An admin may record a payment funded
     // from outside the drawer by confirming the overdraw; a cashier cannot.
-    await assertDrawerCashAvailable(db, cashAmount, {
-      allowOverdraw: data.allowOverdraw === true && user.role === 'admin',
-      label: 'expense',
-    });
+    const result = await db.transaction(async (tx) => {
+      await assertSessionOpen(tx, sessionId);
+      await assertDrawerCashAvailable(tx, cashAmount, {
+        allowOverdraw: data.allowOverdraw === true && user.role === 'admin',
+        label: 'expense',
+      });
 
-    const result = await db.run(`
-      INSERT INTO expenses (
-        title, category, amount, payment_method, cash_amount, online_amount,
-        paid_by, paid_to, expense_date, notes, reference_number, attachment_url,
-        record_type, created_by, updated_by, business_day_id, store_session_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::date, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      title,
-      category,
-      amount,
-      dbPayment,
-      cashAmount,
-      onlineAmount,
-      cleanText(data.paidBy || data.paid_by, 'Cashier'),
-      cleanText(data.paidTo || data.paid_to, ''),
-      expenseDate,
-      cleanText(data.notes, ''),
-      cleanText(data.referenceNumber || data.reference_number, ''),
-      '',
-      recordType,
-      user.id,
-      user.id,
-      businessDayId,
-      sessionId,
-    ]);
+      return tx.run(`
+        INSERT INTO expenses (
+          title, category, amount, payment_method, cash_amount, online_amount,
+          paid_by, paid_to, expense_date, notes, reference_number, attachment_url,
+          record_type, created_by, updated_by, business_day_id, store_session_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::date, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        title,
+        category,
+        amount,
+        dbPayment,
+        cashAmount,
+        onlineAmount,
+        cleanText(data.paidBy || data.paid_by, 'Cashier'),
+        cleanText(data.paidTo || data.paid_to, ''),
+        expenseDate,
+        cleanText(data.notes, ''),
+        cleanText(data.referenceNumber || data.reference_number, ''),
+        '',
+        recordType,
+        user.id,
+        user.id,
+        businessDayId,
+        sessionId,
+      ]);
+    });
 
     await logAction(db, user.id, 'create', 'daily_expense', result.lastInsertRowid, title);
     return NextResponse.json({ message: 'Daily expense recorded', id: result.lastInsertRowid }, { status: 201 });

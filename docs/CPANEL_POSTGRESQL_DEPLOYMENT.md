@@ -52,11 +52,11 @@ Default testing PINs:
 
 | Staff | Role | PIN |
 | --- | --- | --- |
-| Admin | Admin | 1111 |
-| Kanchan | Beautician | 2222 |
-| Raashid | Barber | 3333 |
-| Salman | Barber | 4444 |
-| Saajid | Barber | 5555 |
+| Admin | Admin | 111111 |
+| Kanchan | Beautician | 222222 |
+| Raashid | Barber | 333333 |
+| Salman | Barber | 444444 |
+| Saajid | Barber | 555555 |
 
 Create the dedicated real Cashier account from **Admin > Staff Management** after deployment. Use the actual cashier name and PIN chosen by the salon; do not reuse Kanchan as a cashier fallback.
 

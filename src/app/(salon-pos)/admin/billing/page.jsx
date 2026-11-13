@@ -182,16 +182,19 @@ function BillingContent() {
 
   const subtotal = cartServices.reduce((sum, item) => sum + Number(item.price), 0)
     + cartProducts.reduce((sum, item) => sum + Number(item.selling_price) * item.quantity, 0);
-  const discountAmount = discountType === 'percentage' ? subtotal * (Number(discountValue || 0) / 100) : Number(discountValue || 0);
+  // Rounded to paisa exactly like the server, so split / cash amounts match its total.
+  const round2 = (value) => Math.round(Number(value || 0) * 100) / 100;
+  const discountAmount = round2(discountType === 'percentage' ? subtotal * (Number(discountValue || 0) / 100) : Number(discountValue || 0));
   const safeDiscount = Math.min(Math.max(discountAmount, 0), subtotal);
   // Preview only — the server validates the reward against the loyalty ledger and recomputes.
   const appliedReward = loyalty.programs.find((program) => program.programId === appliedRewardId && program.available > 0) || null;
   const rewardLine = appliedReward?.rewardType === 'FREE_SERVICE' ? cartServices.find((item) => Number(item.id) === Number(appliedReward.rewardServiceId)) : null;
-  const rewardDiscount = !appliedReward ? 0 : Math.min(subtotal - safeDiscount, appliedReward.rewardType === 'FREE_SERVICE'
+  const rewardDiscount = !appliedReward ? 0 : round2(Math.min(subtotal - safeDiscount, appliedReward.rewardType === 'FREE_SERVICE'
     ? Number(rewardLine?.price || 0)
-    : appliedReward.rewardType === 'FIXED_DISCOUNT' ? Number(appliedReward.rewardValue) : (subtotal - safeDiscount) * Number(appliedReward.rewardValue) / 100);
-  const tax = (subtotal - safeDiscount - rewardDiscount) * (Number(taxPercent || 0) / 100);
-  const total = subtotal - safeDiscount - rewardDiscount + tax;
+    : appliedReward.rewardType === 'FIXED_DISCOUNT' ? Number(appliedReward.rewardValue) : (subtotal - safeDiscount) * Number(appliedReward.rewardValue) / 100));
+  const taxable = round2(subtotal - safeDiscount - rewardDiscount);
+  const tax = round2(taxable * (Number(taxPercent || 0) / 100));
+  const total = round2(taxable + tax);
   const change = Number(amountPaid || total) - total;
   const cartCount = cartServices.length + cartProducts.length;
   const splitTotal = Number(splitCashAmount || 0) + Number(splitQrAmount || 0) + Number(splitCreditAmount || 0);

@@ -50,11 +50,11 @@ Open `http://localhost:3002/login`.
 
 | Username | PIN  | Role                  |
 | -------- | ---- | --------------------- |
-| admin    | 1111 | Admin                 |
-| kanchan  | 2222 | Beautician            |
-| raashid  | 3333 | Barber                |
-| salman   | 4444 | Barber                |
-| saajid   | 5555 | Barber                |
+| admin    | 111111 | Admin                 |
+| kanchan  | 222222 | Beautician            |
+| raashid  | 333333 | Barber                |
+| salman   | 444444 | Barber                |
+| saajid   | 555555 | Barber                |
 
 Staff shown on the login page come from the database (`users` + `staff_profiles`). Add or edit staff in **Admin → Employees** after logging in.
 

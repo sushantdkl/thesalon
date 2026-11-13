@@ -49,6 +49,8 @@ export class AuthService {
       INSERT INTO sessions (user_id, token, expires_at)
       VALUES (?, ?, ?)
     `, [user.id, sessionToken, expiresAt.toISOString()]);
+    // Housekeeping on each login so expired sessions don't pile up forever.
+    await this.db.run('DELETE FROM sessions WHERE expires_at < NOW()').catch(() => {});
 
     const role = normalizeRole(user.role);
     return {

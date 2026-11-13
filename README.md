@@ -18,11 +18,11 @@ Only five roles are enabled:
 
 | Role | Default Username | Testing PIN | Access |
 | --- | --- | --- | --- |
-| Admin | admin | 1111 | All modules |
-| Cashier / Beautician | kanchan | 2222 | Billing, customers, products, receipts, reminders, beauty services |
-| Barber | raashid | 3333 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
-| Barber | salman | 4444 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
-| Barber | saajid | 5555 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
+| Admin | admin | 111111 | All modules |
+| Cashier / Beautician | kanchan | 222222 | Billing, customers, products, receipts, reminders, beauty services |
+| Barber | raashid | 333333 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
+| Barber | salman | 444444 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
+| Barber | saajid | 555555 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
 
 The login screen displays a Demo Access panel and fills the demo PIN when a staff profile is selected.
 
@@ -112,7 +112,7 @@ npm run dev
 Default local URL:
 
 ```txt
-http://localhost:3002
+http://localhost:3003
 ```
 
 ## Verification

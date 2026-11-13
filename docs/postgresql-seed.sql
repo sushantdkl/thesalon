@@ -62,11 +62,11 @@ VALUES
 -- Demo staff/users with PINs (bcrypt via pgcrypto)
 WITH staff_seed (username, full_name, role, salon_role, pin, email, assigned_services, commission_percentage, base_salary) AS (
   VALUES
-    ('admin', 'Admin', 'admin', 'admin', '1111', 'admin@thesalon.local', '', 0, 0),
-    ('kanchan', 'Kanchan', 'beautician', 'beautician', '2222', 'kanchan@thesalon.local', 'Normal Cleansing,Deep Cleansing,Wine Facial,Fruit Facial,Lotus Facial,Threading', 10, 0),
-    ('raashid', 'Raashid', 'barber', 'barber', '3333', 'raashid@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0),
-    ('salman', 'Salman', 'barber', 'barber', '4444', 'salman@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0),
-    ('saajid', 'Saajid', 'barber', 'barber', '5555', 'saajid@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0)
+    ('admin', 'Admin', 'admin', 'admin', '111111', 'admin@thesalon.local', '', 0, 0),
+    ('kanchan', 'Kanchan', 'beautician', 'beautician', '222222', 'kanchan@thesalon.local', 'Normal Cleansing,Deep Cleansing,Wine Facial,Fruit Facial,Lotus Facial,Threading', 10, 0),
+    ('raashid', 'Raashid', 'barber', 'barber', '333333', 'raashid@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0),
+    ('salman', 'Salman', 'barber', 'barber', '444444', 'salman@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0),
+    ('saajid', 'Saajid', 'barber', 'barber', '555555', 'saajid@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0)
 ),
 upsert_users AS (
   INSERT INTO users (username, full_name, role, password_hash, email, phone, is_active)
@@ -79,10 +79,11 @@ upsert_users AS (
     '',
     TRUE
   FROM staff_seed
+  -- Never overwrite password_hash: re-running the seed on a live database must not reset
+  -- real PINs back to the demo values.
   ON CONFLICT (username) DO UPDATE SET
     full_name = EXCLUDED.full_name,
     role = EXCLUDED.role,
-    password_hash = EXCLUDED.password_hash,
     email = EXCLUDED.email,
     is_active = TRUE,
     updated_at = NOW()

@@ -239,3 +239,75 @@ never traded — unambiguous, nothing can be misattributed — and **deliberatel
 any that did trade, printing them instead: re-dating real trading history would move revenue
 between reporting periods. Business Day History flags every remaining one with a FUTURE badge
 and an explanatory banner, so none can go unnoticed.
+
+---
+
+## 10. November 2026 audit release (`2026-11-04-audit-fixes.sql`)
+
+No table or column changes. One index and one data repair, both safe to re-run, and safe to run
+before **or** after the new code is live.
+
+| What | Why |
+|------|-----|
+| `idx_sessions_expires_at` | Login now deletes expired sessions; the index keeps that instant. |
+| Customer totals repair | Bills voided by the old code never took their visit and spend off the customer. Only those old voids are subtracted (new voids mark themselves), and each is marked `statsRepaired` so it is never subtracted twice. |
+
+### Steps (cPanel)
+
+```text
+1. Back up the database (section 3).
+2. Upload the new source + a fresh .next build, then npm ci --omit=dev.
+3. Apply the migration:
+     SSH:          npm run db:migrate
+     no SSH:       phpPgAdmin → SQL tab → paste docs/migrations/2026-11-04-audit-fixes.sql → Execute,
+                   then run:  INSERT INTO schema_migrations(version) VALUES ('2026-11-04-audit-fixes') ON CONFLICT DO NOTHING;
+4. Restart Passenger (touch tmp/restart.txt) — server.js changed (trusted client IP for lockouts).
+5. Replace demo PINs:
+     SSH:          npm run pins:rotate-demo            (dry run: who is still on a demo PIN)
+                   npm run pins:rotate-demo -- --apply (sets random 6-digit PINs, prints them once)
+     no SSH:       Admin → Employees → set a new 6–8 digit PIN for every staff member.
+6. Any other staff with a 4–5 digit PIN: reset it in Admin → Employees (old PINs still sign in
+   until changed; new and changed PINs must be 6–8 digits).
+7. Open /api/health → "status": "ok", "pending": 0.
+```
+
+`db:migrate` and `pins:rotate-demo` read `DATABASE_URL` from the shell. If they answer
+"Set DATABASE_URL…", enter the app's virtual environment first (cPanel → Setup Node.js App → copy the
+"source …/activate" command), or prefix the command: `DATABASE_URL='postgresql://…' npm run db:migrate`.
+Locally: `node --env-file=.env.local scripts/rotate-demo-pins.mjs`.
+
+### Verify
+
+```sql
+-- Applied
+SELECT version, applied_at FROM schema_migrations WHERE version = '2026-11-04-audit-fixes';
+
+-- Index present
+SELECT indexname FROM pg_indexes WHERE tablename = 'sessions' AND indexname = 'idx_sessions_expires_at';
+
+-- Every old void has been repaired (must be 0)
+SELECT COUNT(*) FROM financial_corrections fc JOIN salon_bills b ON b.id = fc.source_id
+WHERE fc.source_type = 'salon_bill' AND fc.correction_type = 'void' AND b.customer_id IS NOT NULL
+  AND fc.metadata ->> 'creditReversed' IS NULL AND fc.metadata ->> 'statsRepaired' IS NULL;
+```
+
+### Review by hand: customers the salon owes money to
+
+Old voids of a credit bill the customer had already paid off left a **negative** credit balance —
+the customer paid, the bill was cancelled, and the money was never given back. New voids refund
+it automatically; old ones are listed here for the owner to settle (refund in cash, or keep as
+credit toward their next bill):
+
+```sql
+SELECT c.id, c.name, c.phone, SUM(l.debit - l.credit) AS balance
+FROM customer_credit_ledger l JOIN customers c ON c.id = l.customer_id
+GROUP BY c.id, c.name, c.phone
+HAVING SUM(l.debit - l.credit) < 0
+ORDER BY balance;
+```
+
+### Fresh database
+
+`docs/postgresql-schema.sql` → `docs/postgresql-seed.sql` → `npm run db:migrate`. The seed's demo
+PINs are 111111 (admin), 222222, 333333, 444444, 555555 — run `npm run pins:rotate-demo -- --apply`
+before anyone outside the team can reach the site. Re-running the seed never resets real PINs.

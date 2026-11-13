@@ -12,9 +12,6 @@ import { NextResponse } from 'next/server';
  *
  * Only GET/HEAD page requests are moved. API calls are left alone so an open POS tab on another
  * host keeps working until it reloads. Localhost, LAN, demo and QA hosts are never touched.
- *
- * Note: Next.js 15 runs `middleware.js`; `src/proxy.js` is the Next 16 name and is not loaded
- * by this version (the licence check inside it is therefore inactive — unchanged by this file).
  */
 const CANONICAL_HOST = (process.env.SITE_CANONICAL_HOST || 'thesalon.com.np').toLowerCase();
 

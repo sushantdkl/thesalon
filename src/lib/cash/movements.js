@@ -18,7 +18,7 @@
  */
 
 import { logAction } from '@/lib/db/helpers';
-import { assertDrawerCashAvailable, requireOpenSession } from '@/lib/business-day/service';
+import { assertDrawerCashAvailable, assertSessionOpen, requireOpenSession } from '@/lib/business-day/service';
 import { numeric } from '@/lib/reports/finance-summary';
 import { periodDateColumnFilter } from '@/lib/db/postgres-dates';
 import { DASHBOARD_PERIODS } from '@/lib/reports/dashboard-period';
@@ -141,6 +141,7 @@ export async function recordMovement(db, user, input) {
   const legs = movementLegs({ type, direction, amount, charge });
 
   return db.transaction(async (tx) => {
+    await assertSessionOpen(tx, scope.sessionId);
     // Cash cannot leave a drawer that does not hold it — same guard as every other payout.
     if (legs.cashOut > 0) {
       await assertDrawerCashAvailable(tx, legs.cashOut, {
@@ -174,6 +175,7 @@ export async function reverseMovement(db, user, { id, reason }) {
   const scope = await requireOpenSession(db);
 
   return db.transaction(async (tx) => {
+    await assertSessionOpen(tx, scope.sessionId);
     const original = await tx.get('SELECT * FROM cash_movements WHERE id = ? FOR UPDATE', [Number(id)]);
     if (!original) { const error = new Error('Entry not found'); error.status = 404; throw error; }
     if (original.status === 'REVERSAL') throw badRequest('A reversal cannot itself be reversed');

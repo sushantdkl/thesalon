@@ -9,7 +9,7 @@ import { currentSalaryMonth, monthStart, nextMonthStart } from '@/lib/payroll/co
 import { assertExpenseCategory, categoryLabels, listCategories } from '@/lib/expenses/categories';
 import { cleanText, ensureSalonSchema, requireRole } from '@/lib/salon-schema';
 import { PERMISSIONS, requirePermission } from '@/lib/auth/permissions';
-import { assertDrawerCashAvailable, requireOpenSession } from '@/lib/business-day/service';
+import { assertDrawerCashAvailable, assertSessionOpen, requireOpenSession } from '@/lib/business-day/service';
 import {
   applyAdvances,
   cancelAdvance,
@@ -447,6 +447,7 @@ async function saveExpense(db, data, userId, scope = {}) {
   // through here, so one guard covers them all: cash cannot leave a drawer that does not hold
   // it. Inside a transaction this sees the rows already inserted by the same settlement, so
   // sequential payouts compound correctly. Updates are skipped (the row is already counted).
+  if (scope.storeSessionId) await assertSessionOpen(db, scope.storeSessionId);
   await assertDrawerCashAvailable(db, payment.cash, {
     allowOverdraw: data.allowOverdraw === true,
     label: category === 'Staff Salary' || category === 'Staff Commission' ? 'salary payment' : 'expense',
@@ -706,7 +707,8 @@ export async function POST(request) {
       await logAction(db, user.id, 'create', 'salary_advance', result.advanceId, `${result.staffName} ${result.amount}`);
       return NextResponse.json({ message: 'Advance salary recorded', id: result.advanceId }, { status: 201 });
     }
-    const id = await saveExpense(db, data, user.id, scope);
+    // In a transaction so the open-session guard inside saveExpense holds until the insert commits.
+    const id = await db.transaction((tx) => saveExpense(tx, data, user.id, scope));
     await logAction(db, user.id, 'create', 'expense', id, cleanText(data.title, 'Expense'));
     return NextResponse.json({ message: 'Expense saved', id }, { status: 201 });
   } catch (error) {
@@ -728,6 +730,9 @@ export async function PUT(request) {
       ? await requirePermission(request, db, PERMISSIONS.PAYROLL_RECORDS_CORRECT)
       : await requireRole(request, db, 'admin');
     if (data.type === 'salary') {
+      // PUT only corrects an existing settlement. Without an id saveSalary would create a new
+      // payment, skipping the payments.create permission and the open-store check on POST.
+      if (!Number(data.id || 0)) return NextResponse.json({ error: 'Salary payment ID is required' }, { status: 400 });
       const id = await saveSalary(db, data, user.id);
       return NextResponse.json({ message: 'Salary payment updated', id });
     }

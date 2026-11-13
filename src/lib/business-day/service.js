@@ -309,6 +309,21 @@ export async function requireOpenSession(db) {
   return { sessionId: session.id, businessDayId: session.business_day_id, session };
 }
 
+/**
+ * Call INSIDE the transaction that writes drawer money, with the session from
+ * requireOpenSession. FOR SHARE makes Close Store (which takes FOR UPDATE on the session) wait
+ * for this write to commit, and makes a write that starts after the close see CLOSED — so no
+ * sale, refund or payout can land in a session that was closed while the request was running.
+ */
+export async function assertSessionOpen(tx, sessionId) {
+  const row = await tx.get(`SELECT id FROM store_sessions WHERE id = ? AND status = 'OPEN' FOR SHARE`, [sessionId]);
+  if (row) return;
+  const error = new Error('The store was closed while this was being saved. Open the store and try again.');
+  error.status = 409;
+  error.code = STORE_CLOSED_CODE;
+  throw error;
+}
+
 function validateTransfer(direction, amount, transfer) {
   if (amount <= 0) return null; // no difference, nothing to record
   const t = transfer || {};
@@ -609,7 +624,10 @@ export async function closeStore(db, user, input) {
       SELECT ss.*, bd.business_date FROM store_sessions ss
       JOIN business_days bd ON bd.id = ss.business_day_id
       WHERE ss.status = 'OPEN' ORDER BY ss.id DESC LIMIT 1
+      FOR UPDATE OF ss
     `);
+    // FOR UPDATE: waits for in-flight money writes (assertSessionOpen holds FOR SHARE), so the
+    // expected cash below includes every sale that was already being saved.
     if (!session) throw badRequest('The store is already closed.');
 
     const blockers = await getCloseBlockers(tx, session);

@@ -17,7 +17,8 @@ export async function POST(request) {
     const file = formData.get('file');
     const folder = formData.get('folder');
     // Payment QR images belong to Settings (admin only); website images to the CMS permission.
-    if (user.role !== 'admin' && String(folder) === 'payment-qr') {
+    // Normalised the same way the uploader resolves the folder, so "Payment-QR " can't slip past.
+    if (user.role !== 'admin' && String(folder || '').toLowerCase().trim() === 'payment-qr') {
       return NextResponse.json({ error: 'Only an admin can change payment QR images' }, { status: 403 });
     }
     const uploaded = await uploadWebsiteImage({ file, folder });
@@ -44,7 +45,7 @@ export async function DELETE(request) {
     await ensureSalonSchema();
     const user = await requireRoleWithPermission(request, db, ['admin', 'cashier'], PERMISSIONS.WEBSITE_MANAGE);
     const { imageUrl } = await request.json();
-    if (user.role !== 'admin' && String(imageUrl || '').includes('/payment-qr/')) {
+    if (user.role !== 'admin' && String(imageUrl || '').toLowerCase().includes('/payment-qr/')) {
       return NextResponse.json({ error: 'Only an admin can change payment QR images' }, { status: 403 });
     }
     await deletePublicUploadUrl(imageUrl);

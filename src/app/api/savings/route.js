@@ -5,7 +5,7 @@ import { logAction } from '@/lib/db/helpers';
 import { mapApiError } from '@/lib/db/api-errors';
 import { cleanText, ensureSalonSchema, requireRole } from '@/lib/salon-schema';
 import { salonDateString } from '@/lib/reports/dashboard-period';
-import { requireOpenSession } from '@/lib/business-day/service';
+import { assertSessionOpen, requireOpenSession } from '@/lib/business-day/service';
 import {
   DEPOSIT_SOURCE_ACCOUNTS,
   DEPOSIT_SOURCE_LABELS,
@@ -251,6 +251,7 @@ export async function POST(request) {
     }
 
     const id = await db.transaction(async (tx) => {
+      await assertSessionOpen(tx, sessionId);
       await assertNotDuplicateSubmission(tx, input, user.id);
       await assertBalanceAvailable(tx, { ...input, allowOverdraw: data.allowOverdraw === true }, user);
 

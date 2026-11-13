@@ -16,6 +16,7 @@
     "db:plan": "node scripts/plan-migrations.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "db:verify": "node scripts/verify-migrations.mjs",
+    "pins:rotate-demo": "node scripts/rotate-demo-pins.mjs",
     "verify:cashier-payroll-denial": "node scripts/verify-cashier-payroll-denial.mjs",
     "verify:permission-policy": "node scripts/verify-permission-policy.mjs",
     "qa:create-db": "node --env-file=.env.local scripts/qa/create-qa-db.mjs",

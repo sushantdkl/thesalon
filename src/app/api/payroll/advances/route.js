@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import Database from '@/lib/db/index';
 import { PERMISSIONS, hasPermission, requirePermission } from '@/lib/auth/permissions';
-import { requireOpenSession, assertDrawerCashAvailable } from '@/lib/business-day/service';
+import { requireOpenSession, assertDrawerCashAvailable, assertSessionOpen } from '@/lib/business-day/service';
 import { nepalDateString } from '@/lib/dates/calendar';
 import { resolveReportPeriod } from '@/lib/dates/report-periods';
 import { advanceEligibility, createAdvance, getOutstandingAdvance } from '@/lib/payroll/salary-advances';
@@ -106,7 +106,9 @@ export async function POST(request) {
     const scope = await requireOpenSession(db);
     const period = resolveReportPeriod('this_month', { calendarSystem: advancePolicy.calendarSystem });
     const paymentDate = clean(data.paymentDate) || nepalDateString();
-    const result = await db.transaction(async (tx) => createAdvance(tx, {
+    const result = await db.transaction(async (tx) => {
+      await assertSessionOpen(tx, scope.sessionId);
+      return createAdvance(tx, {
       ...data,
       staffId: Number(data.staffId || 0),
       amount,
@@ -119,7 +121,8 @@ export async function POST(request) {
       overrideReason: data.overrideReason,
       idempotencyKey,
       sourceIdentifier: `ADV-${idempotencyKey}`,
-    }, user.id, { businessDayId: scope.businessDayId, storeSessionId: scope.sessionId }, (innerTx, input, actor, innerScope) => createExpense(innerTx, { ...input, paidBy: user.full_name || user.username }, actor, innerScope)));
+    }, user.id, { businessDayId: scope.businessDayId, storeSessionId: scope.sessionId }, (innerTx, input, actor, innerScope) => createExpense(innerTx, { ...input, paidBy: user.full_name || user.username }, actor, innerScope));
+    });
     return NextResponse.json({ message: result.basis === 'commission' ? 'Commission advance issued' : 'Salary advance issued', ...result }, { status: 201 });
   } catch (error) {
     if (error.code === '23505') return NextResponse.json({ error: 'This advance request has already been processed' }, { status: 409 });

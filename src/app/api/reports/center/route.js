@@ -25,8 +25,8 @@ export async function GET(request) {
     const start = params.get('start') || nepalDateString();
     const end = params.get('end') || start;
     if (!isCanonicalAdDate(start) || !isCanonicalAdDate(end) || start > end) return NextResponse.json({ error: 'Invalid report date range' }, { status: 400 });
-    const page = Math.max(1, Number(params.get('page') || 1));
-    const pageSize = Math.min(100, Math.max(10, Number(params.get('pageSize') || 25)));
+    const page = Math.max(1, Math.floor(Number(params.get('page')) || 1));
+    const pageSize = Math.min(100, Math.max(10, Math.floor(Number(params.get('pageSize')) || 25)));
     const offset = (page - 1) * pageSize;
     let rows = []; let metrics = {}; let total = 0;
     // Same "sold bill" rule as finance-summary: a voided bill stays a sale on its sale date and

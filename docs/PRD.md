@@ -39,11 +39,11 @@ The product focuses on POS-side salon operations plus a lightweight public websi
 
 | Staff | Login Role | Service Role | PIN | Assigned Services |
 | --- | --- | --- | --- | --- |
-| Admin | Admin | Admin | 1111 | Full system access |
-| Kanchan | Beautician | Beautician | 2222 | Beauty services, beauty treatments, customer history, and personal performance |
-| Raashid | Barber | Barber | 3333 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
-| Salman | Barber | Barber | 4444 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
-| Saajid | Barber | Barber | 5555 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
+| Admin | Admin | Admin | 111111 | Full system access |
+| Kanchan | Beautician | Beautician | 222222 | Beauty services, beauty treatments, customer history, and personal performance |
+| Raashid | Barber | Barber | 333333 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
+| Salman | Barber | Barber | 444444 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
+| Saajid | Barber | Barber | 555555 | Hair Cut, Hair Wash, Shaving, Head Massage, Threading |
 
 ## Launch Service Catalog
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Database from '@/lib/db/index';
 import { PERMISSIONS, requirePermission } from '@/lib/auth/permissions';
-import { assertDrawerCashAvailable, requireOpenSession } from '@/lib/business-day/service';
+import { assertDrawerCashAvailable, assertSessionOpen, requireOpenSession } from '@/lib/business-day/service';
 import { fromMinor, toMinor } from '@/lib/payments/money';
 
 export const runtime = 'nodejs';
@@ -45,6 +45,7 @@ export async function POST(request, { params }) {
     const scope = await requireOpenSession(db);
 
     const result = await db.transaction(async (tx) => {
+      await assertSessionOpen(tx, scope.sessionId);
       const bill = await tx.get('SELECT * FROM salon_bills WHERE id = ? FOR UPDATE', [id]);
       if (!bill) throw badRequest('Bill not found', 404);
       if (bill.status !== 'paid') throw badRequest('A cancelled bill cannot be changed');

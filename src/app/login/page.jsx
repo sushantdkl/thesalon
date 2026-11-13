@@ -64,8 +64,9 @@ export default function LoginPage() {
       return
     }
 
+    // 4–5 digit PINs set before the 6-digit rule still sign in until an admin resets them.
     if (!/^\d{4,8}$/.test(password)) {
-      setError('Enter your 4 to 8 digit PIN')
+      setError('Enter your PIN (6 to 8 digits)')
       return
     }
 

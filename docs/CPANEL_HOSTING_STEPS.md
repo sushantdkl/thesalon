@@ -187,11 +187,11 @@ Use these PINs during testing:
 
 | User | Role | PIN |
 | --- | --- | --- |
-| Admin | Admin | 1111 |
-| Kanchan | Beautician | 2222 |
-| Raashid | Barber | 3333 |
-| Salman | Barber | 4444 |
-| Saajid | Barber | 5555 |
+| Admin | Admin | 111111 |
+| Kanchan | Beautician | 222222 |
+| Raashid | Barber | 333333 |
+| Salman | Barber | 444444 |
+| Saajid | Barber | 555555 |
 
 Create the dedicated Cashier account from **Admin > Staff Management** using the real cashier name and salon-approved PIN. Kanchan should remain Beautician-only.
 

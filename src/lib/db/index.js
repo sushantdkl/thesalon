@@ -129,17 +129,27 @@ class PostgresDatabase extends PostgresAdapter {
   }
 }
 
+const notConfiguredError = () => new Error(
+  'DATABASE_URL must be a postgresql:// connection string. Apply docs/postgresql-schema.sql and docs/postgresql-seed.sql to the cPanel PostgreSQL database first.'
+);
+
+/**
+ * Without DATABASE_URL every query fails (with the message above) instead of getInstance()
+ * throwing. Callers already handle failed queries, so `next build` on a machine with no
+ * database prerenders pages from their fallback data rather than crashing.
+ */
+const unconfiguredDatabase = Object.assign(new PostgresAdapter(() => Promise.reject(notConfiguredError())), {
+  transaction: () => Promise.reject(notConfiguredError()),
+  close: async () => {},
+});
+
 class Database {
   static instance = null;
 
   static getInstance() {
     if (!Database.instance) {
       const databaseUrl = process.env.DATABASE_URL || '';
-      if (!/^(postgres|postgresql):\/\//i.test(databaseUrl)) {
-        throw new Error(
-          'DATABASE_URL must be a postgresql:// connection string. Apply docs/postgresql-schema.sql and docs/postgresql-seed.sql to the cPanel PostgreSQL database first.'
-        );
-      }
+      if (!/^(postgres|postgresql):\/\//i.test(databaseUrl)) return unconfiguredDatabase;
       Database.instance = new PostgresDatabase(databaseUrl);
     }
     return Database.instance;

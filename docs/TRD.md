@@ -89,11 +89,11 @@ The login screen lists active staff profiles but never displays PIN values. PIN 
 
 Launch demo PINs:
 
-- Admin: `1111`
-- Kanchan, Beautician: `2222`
-- Raashid, Barber: `3333`
-- Salman, Barber: `4444`
-- Saajid, Barber: `5555`
+- Admin: `111111`
+- Kanchan, Beautician: `222222`
+- Raashid, Barber: `333333`
+- Salman, Barber: `444444`
+- Saajid, Barber: `555555`
 
 ## Role-Based Access
 

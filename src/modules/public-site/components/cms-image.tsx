@@ -25,12 +25,14 @@ function normalizeSrc(src: string) {
   return value;
 }
 
+/**
+ * Uploaded files and any outside link load straight in the browser. The server's image
+ * optimizer only handles the site's own static images (next.config remotePatterns), so it can
+ * never be used to fetch arbitrary hosts — and a CMS image pasted from anywhere still shows.
+ */
 function shouldSkipOptimization(src: string) {
   const value = String(src || '');
-  return (
-    value.startsWith('/uploads/') ||
-    /\/\/(localhost|127\.0\.0\.1)/i.test(value)
-  );
+  return value.startsWith('/uploads/') || /^(https?:)?\/\//i.test(value);
 }
 
 /**

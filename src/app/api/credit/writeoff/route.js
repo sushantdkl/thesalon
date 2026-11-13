@@ -5,6 +5,7 @@ import { PERMISSIONS, requirePermission } from '@/lib/auth/permissions';
 import { getOpenSession } from '@/lib/business-day/service';
 import { logAction } from '@/lib/db/helpers';
 import { fromMinor, toMinor } from '@/lib/payments/money';
+import { isDatabaseNoise } from '@/lib/api/errors';
 
 /**
  * POST { customer_id, amount, reason } — forgive part of a customer's credit balance.
@@ -42,6 +43,8 @@ export async function POST(request) {
     });
     return NextResponse.json({ message: 'Credit forgiven', ...result }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error.message || 'Unable to forgive credit' }, { status: error.status || 400 });
+    const noise = isDatabaseNoise(error?.message);
+    if (noise) console.error('Credit write-off failed:', error);
+    return NextResponse.json({ error: noise ? 'Unable to forgive credit. Nothing was saved.' : (error.message || 'Unable to forgive credit') }, { status: error.status || 400 });
   }
 }

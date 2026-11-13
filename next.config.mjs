@@ -30,11 +30,12 @@ const nextConfig = {
   images: {
     // 30 = decorative page-hero wash (12% opacity); 75 = everything else.
     qualities: [30, 75],
-    // Local uploaded media is served from this app; allow optimizer host access in development.
-    // dangerouslyAllowLocalIP: true,
+    // Only our own domain goes through the optimizer. A wildcard here let anyone use the server
+    // to download and resize images from any host. CMS images from other sites still display:
+    // CmsImage renders every outside URL unoptimized (loaded by the browser, not the server).
     remotePatterns: [
-      { protocol: 'https', hostname: '**' },
-      { protocol: 'http', hostname: '**' },
+      { protocol: 'https', hostname: 'thesalon.com.np' },
+      { protocol: 'https', hostname: 'www.thesalon.com.np' },
     ],
   },
 };

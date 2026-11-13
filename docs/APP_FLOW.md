@@ -49,7 +49,7 @@ flowchart TD
 
 ## Cashier Flow
 
-1. Kanchan logs in with PIN `2222`.
+1. Kanchan logs in with PIN `222222`.
 2. Cashier opens billing.
 3. Cashier selects an existing customer or creates a new customer during billing.
 4. Cashier adds services.
@@ -64,7 +64,7 @@ Kanchan is also selectable as Beautician on beauty services so her beauty revenu
 
 ## Barber Flow
 
-1. Raashid logs in with PIN `3333`, Salman logs in with PIN `4444`, or Saajid logs in with PIN `5555`.
+1. Raashid logs in with PIN `333333`, Salman logs in with PIN `444444`, or Saajid logs in with PIN `555555`.
 2. Barber lands on `/dashboard/barber`.
 3. Barber sees today, week, month, and lifetime metrics.
 4. Barber reviews recent completed services, customers, invoice references, revenue, and commission.

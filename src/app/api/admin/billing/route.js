@@ -4,7 +4,7 @@ import Database from '@/lib/db/index';
 import { logAction } from '@/lib/db/helpers';
 import { cleanText, ensureSalonSchema, requireRole } from '@/lib/salon-schema';
 import { PHONE_ERROR_MESSAGE, phoneOrNull } from '@/lib/validation/phone';
-import { requireOpenSession } from '@/lib/business-day/service';
+import { assertSessionOpen, requireOpenSession } from '@/lib/business-day/service';
 import { salonDateString } from '@/lib/reports/dashboard-period';
 import { randomUUID } from 'node:crypto';
 import { normalizePaymentAllocations } from '@/lib/payments/allocations';
@@ -20,61 +20,16 @@ function normalizeDiscount(type, value, subtotal) {
   if (!Number.isFinite(amount) || amount < 0) throw new Error('Discount cannot be negative');
   if (type === 'percentage') {
     if (amount > 100) throw new Error('Percentage discount cannot exceed 100');
-    return (subtotal * amount) / 100;
+    return money((subtotal * amount) / 100);
   }
   if (amount > subtotal) throw new Error('Discount cannot exceed subtotal');
-  return amount;
+  return money(amount);
 }
 
 function money(value) {
   const parsed = Number(value || 0);
-  if (!Number.isFinite(parsed)) throw new Error('Invalid payment amount');
+  if (!Number.isFinite(parsed)) throw new Error('Invalid amount');
   return Math.round(parsed * 100) / 100;
-}
-
-function normalizePayment(data, grandTotal) {
-  const total = money(grandTotal);
-  const paymentMethod = ['cash', 'card', 'online', 'split'].includes(data.payment_method) ? data.payment_method : 'cash';
-  const qrType = ['ESEWA_PHONEPAY', 'BANK'].includes(data.qr_type) ? data.qr_type : null;
-  let cashAmount = 0;
-  let qrAmount = 0;
-  // amountTendered is what the customer handed over (cash may exceed the bill, and the
-  // receipt prints the change). totalPaid is what the salon actually collected, and it
-  // always equals cash + QR = final bill total.
-  let amountTendered = total;
-
-  if (paymentMethod === 'cash') {
-    amountTendered = money(data.amount_paid || total);
-    if (amountTendered < total) throw new Error('Amount paid is less than total');
-    cashAmount = total;
-  } else if (paymentMethod === 'online') {
-    if (!qrType) throw new Error('Select QR type for online payment');
-    qrAmount = total;
-  } else if (paymentMethod === 'card') {
-    // Card settles to the salon's bank account, so it belongs with online collection.
-    qrAmount = total;
-  } else if (paymentMethod === 'split') {
-    cashAmount = money(data.cash_amount);
-    qrAmount = money(data.qr_amount);
-    if (qrAmount > 0 && !qrType) throw new Error('Select QR type for split payment');
-    if (cashAmount < 0) throw new Error('Cash amount cannot be negative');
-    if (qrAmount < 0) throw new Error('QR amount cannot be negative');
-    if (cashAmount > total) throw new Error('Cash amount cannot exceed total payable');
-    if (qrAmount > total) throw new Error('QR amount cannot exceed total payable');
-    if (Math.abs((cashAmount + qrAmount) - total) > 0.01) {
-      throw new Error('Cash amount and QR amount must equal total payable');
-    }
-  }
-
-  return {
-    paymentMethod,
-    cashAmount: money(cashAmount),
-    qrAmount: money(qrAmount),
-    qrType: paymentMethod === 'online' || (paymentMethod === 'split' && qrAmount > 0) ? qrType : null,
-    amountTendered: money(amountTendered),
-    totalPaid: money(cashAmount + qrAmount),
-    paymentStatus: 'paid',
-  };
 }
 
 /**
@@ -197,6 +152,7 @@ export async function POST(request) {
     }
 
     const result = await db.transaction(async (tx) => {
+      await assertSessionOpen(tx, sessionId);
       let customerId = data.customer_id || null;
       const tokenId = Number(data.token_id || 0) || null;
       let linkedToken = null;
@@ -280,12 +236,17 @@ export async function POST(request) {
       }
 
       const productRows = [];
+      // Stock already taken by earlier lines of this bill, so the same product listed twice
+      // is checked and decremented against what is really left.
+      const stockLeft = new Map();
       for (const item of products) {
         const product = await tx.get('SELECT * FROM salon_products WHERE id = ? AND status = ? FOR UPDATE', [item.id, 'active']);
         if (!product) throw new Error(`Product unavailable: ${item.name || item.id}`);
         const quantity = Number(item.quantity || 1);
         if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Invalid quantity for ${product.name}`);
-        if (product.current_stock < quantity) throw new Error(`Not enough stock for ${product.name}`);
+        const available = stockLeft.has(product.id) ? stockLeft.get(product.id) : Number(product.current_stock);
+        if (available < quantity) throw new Error(`Not enough stock for ${product.name}`);
+        stockLeft.set(product.id, available - quantity);
         productRows.push({
           item_type: 'product',
           item_id: product.id,
@@ -297,8 +258,8 @@ export async function POST(request) {
           commission_percentage: 0,
           commission_amount: 0,
           unit_cost_snapshot: Number(product.purchase_price || 0),
-          previous_stock: product.current_stock,
-          new_stock: product.current_stock - quantity,
+          previous_stock: available,
+          new_stock: available - quantity,
         });
       }
 
@@ -314,14 +275,16 @@ export async function POST(request) {
         ? await planRedemption(tx, { customerId, programId: redeemProgramId, serviceRows, amountAfterDiscount: subtotal - discountAmount })
         : null;
       if (loyalty && loyalty.rewardIndex >= 0) serviceRows[loyalty.rewardIndex].loyalty_reward = true;
-      const loyaltyDiscount = loyalty ? loyalty.discount : 0;
-      const taxable = subtotal - discountAmount - loyaltyDiscount;
+      const loyaltyDiscount = loyalty ? money(loyalty.discount) : 0;
+      const taxable = money(subtotal - discountAmount - loyaltyDiscount);
       const taxPercent = Number(data.tax_percent || 0);
-      if (taxPercent < 0 || taxPercent > 100) throw new Error('Invalid tax percentage');
-      const tax = taxable * taxPercent / 100;
-      const serviceCharge = Number(data.service_charge || 0);
+      if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) throw new Error('Invalid tax percentage');
+      // Rounded to paisa: payment allocations accept at most two decimals, so an unrounded
+      // percentage discount or tax would otherwise make the bill impossible to settle.
+      const tax = money(taxable * taxPercent / 100);
+      const serviceCharge = money(data.service_charge);
       if (serviceCharge < 0) throw new Error('Service charge cannot be negative');
-      const grandTotal = taxable + tax + serviceCharge;
+      const grandTotal = money(taxable + tax + serviceCharge);
       const payment = normalizePaymentAllocations(data, grandTotal, { customerId });
       if (payment.creditAmount > 0) {
         if (!(await hasPermission(tx, user, PERMISSIONS.BILLING_CREDIT_CREATE))) {

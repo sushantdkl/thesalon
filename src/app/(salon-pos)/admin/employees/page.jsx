@@ -361,7 +361,7 @@ export default function StaffPage() {
                 <span className="mb-2 block text-sm font-medium text-gray-900">{editingStaff ? 'New PIN' : 'PIN *'}</span>
                 <div className="relative">
                   <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input type="text" inputMode="numeric" required={!editingStaff} value={formData.password} onChange={(event) => setFormData({ ...formData, password: event.target.value })} className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-gray-950 outline-none focus:ring-2 focus:ring-gray-900" placeholder="4 or more digits" />
+                  <input type="text" inputMode="numeric" required={!editingStaff} value={formData.password} onChange={(event) => setFormData({ ...formData, password: event.target.value })} className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-gray-950 outline-none focus:ring-2 focus:ring-gray-900" placeholder="6 to 8 digits" minLength={6} maxLength={8} pattern="d{6,8}" />
                 </div>
               </label>
               <label className="block">

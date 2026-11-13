@@ -63,6 +63,13 @@ export async function GET(request, { params }) {
     const collected = allocations.filter((row) => row.method !== 'credit').reduce((sum, row) => sum + Number(row.amount), 0);
     const inOpenSession = Boolean(openSession) && String(openSession.id) === String(bill.store_session_id);
 
+    // Credit on this bill the customer has already paid back: a void refunds it as money.
+    const billCredit = allocations.filter((row) => row.method === 'credit').reduce((sum, row) => sum + Number(row.amount), 0);
+    const creditBalance = billCredit > 0 && bill.customer_id
+      ? Number((await db.get('SELECT COALESCE(SUM(debit-credit),0) AS balance FROM customer_credit_ledger WHERE customer_id = ?', [bill.customer_id]))?.balance || 0)
+      : 0;
+    const creditStillOwed = Math.min(billCredit, Math.max(0, creditBalance));
+
     const loyaltyDiscount = round2(bill.loyalty_discount);
     return NextResponse.json({
       bill: {
@@ -94,7 +101,9 @@ export async function GET(request, { params }) {
         storeOpen: Boolean(openSession),
         inOpenSession,
         collected: round2(collected),
-        credit: round2(allocations.filter((row) => row.method === 'credit').reduce((sum, row) => sum + Number(row.amount), 0)),
+        credit: round2(billCredit),
+        creditStillOwed: round2(creditStillOwed),
+        creditPaidBack: round2(billCredit - creditStillOwed),
       },
       refunds: refunds.map((row) => ({ method: row.method, amount: round2(row.amount), at: row.created_at })),
       loyalty: loyalty.map((row) => ({ type: row.entry_type, visits: Number(row.visits), program: row.program, at: row.created_at, reversed: row.reversed })),

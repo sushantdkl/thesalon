@@ -17,7 +17,8 @@ export class AuthService {
       WHERE LOWER(u.username) = ? AND u.is_active = TRUE
     `, [normalizedUsername]);
 
-    if (!user) {
+    // Staff added without "System login" (can_login = FALSE) are assigned work but never sign in.
+    if (!user || user.can_login === false) {
       return { success: false, error: 'User not found' };
     }
 

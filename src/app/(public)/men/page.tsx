@@ -41,7 +41,7 @@ export default function MenServicesPage() {
                     <span className="min-w-0 flex-1 font-medium">{item.name}</span>
                     <span className="shrink-0 text-right tabular-nums text-brass">{item.price}</span>
                     <Link
-                      href={bookingHref(item.book, `Men's ${item.name.toLowerCase()}`)}
+                      href={bookingHref(item.book, `Men's ${item.name.toLowerCase()}`, 'men')}
                       aria-label={`Book ${item.name}`}
                       className="inline-flex min-h-10 shrink-0 items-center rounded-full bg-glow px-4 text-sm font-medium text-cinder transition hover:brightness-110"
                     >

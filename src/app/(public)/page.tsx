@@ -4,7 +4,7 @@ import { SiteShell } from '@/modules/public-site/components/site-shell';
 import { Section } from '@/modules/public-site/components/section';
 import { CustomerReviews } from '@/modules/public-site/components/customer-reviews';
 import { PackageCard } from '@/modules/public-site/components/cards';
-import { StaffCarousel } from '@/modules/public-site/components/staff-carousel';
+import { StaffShowcase, teamLayoutOf } from '@/modules/public-site/components/staff-showcase';
 import { CmsImage } from '@/modules/public-site/components/cms-image';
 import { getSiteContext, staticPageMetadata } from '@/modules/public-site/services/seo';
 import { createWhatsAppLink } from '@/modules/public-site/utils/whatsapp';
@@ -12,50 +12,13 @@ import { bookingHref, womenServices } from '@/modules/public-site/data/women-ser
 import { studio } from '@/modules/public-site/data/studio-photos';
 import { menServices } from '@/modules/public-site/data/men-services';
 import { HeroMenu, type HeroMenuTab } from '@/modules/public-site/components/hero-menu';
-import type { PublicPackage, ServicePage } from '@/modules/public-site/types';
+import type { PublicPackage } from '@/modules/public-site/types';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
   return staticPageMetadata(await getSiteContext(), '/');
 }
-
-/** One studio, two sides of the floor, plus the glam studio. */
-const SERVICE_MENU = [
-  {
-    title: 'For him',
-    side: 'Barber chair',
-    items: [
-      ['Hair Cut', 'Rs 300. Hair wash Rs 50, head massage Rs 300 / 600.'],
-      ['Beard, shaving and threading', 'Beard Rs 150, shaving Rs 100, threading Rs 70.'],
-      ['Cleansing and facial', 'From normal cleansing at Rs 700 to Nature’s Facial at Rs 3,800.'],
-      ['Hair colour', 'Black colour Rs 700. Global, cap highlight and ash from Rs 1,500.'],
-      ['Straightening and keratin', 'Temporary straight or curl Rs 500. Keratin from Rs 2,500.'],
-    ],
-  },
-  {
-    title: 'For her',
-    side: 'Hair studio',
-    items: [
-      ['Cut and blow-dry', 'Layers, curtain fringes, long and short shapes.'],
-      ['Colour and highlights', 'Global colour, highlights and soft balayage.'],
-      ['Hair spa', 'Deep conditioning for dry or coloured hair.'],
-      ['Smoothing and keratin', 'Frizz control that lasts for months.'],
-      ['Waxing and threading', 'Quick, neat and gentle.'],
-    ],
-  },
-  {
-    title: 'Glam studio',
-    side: 'Makeup and occasions',
-    items: [
-      ['Party makeup', 'Soft glam to full evening looks.'],
-      ['Bridal and engagement', 'Trial, makeup and hairstyling for the big day.'],
-      ['Event hairstyling', 'Buns, waves and braids that hold all night.'],
-      ['Saree draping', 'Neat pleats, pinned to stay.'],
-      ['Group bookings', 'For bridesmaids, family and teams.'],
-    ],
-  },
-] as const;
 
 const SHADES = [
   ['Light blonde', 'Level 8', '#c9a46b', '#a07d48'],
@@ -78,11 +41,10 @@ const TILE = 'group flex min-h-[72px] items-center gap-4 rounded-2xl border bord
 
 export default async function HomePage() {
   const context = await getSiteContext();
-  const { cms, info, settings, servicePages } = context;
+  const { cms, info, settings } = context;
   const { sections } = cms;
   const place = [settings.locality, settings.district].filter(Boolean).join(', ');
   const hero = sections.hero;
-  const servicesSection = sections.services;
   const packagesSection = sections.packages;
   const staffSection = sections.staff;
   const colour = sections.about;
@@ -90,6 +52,7 @@ export default async function HomePage() {
   const whatsappUrl = createWhatsAppLink(`Hello ${info.name}, I'd like to book a visit.`, info.whatsappNumber);
   const homeServiceUrl = createWhatsAppLink(`Hello ${info.name}, I'd like to book a home service. Service: , Date: , Address: `, info.whatsappNumber);
   const tel = `tel:${String(info.phone || '').replace(/[^\d+]/g, '')}`;
+  const mapsUrl = settings.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${info.name} ${info.address}`)}`;
   // Our own shoot fills the mosaic; the full set (plus any CMS uploads) is on /gallery.
   const hasPackages = packagesSection.isVisible && cms.packages.length > 0;
   const gallery = [studio.roundMirrors, studio.storefront, studio.lashExtensions, studio.nailArt, studio.mensTrim];
@@ -102,7 +65,7 @@ export default async function HomePage() {
   const doors = [
     {
       id: 'men', eyebrow: 'For him', title: 'Men', cta: 'Book haircut', ctaShort: 'Book now', aria: "Men: book a men's haircut",
-      href: bookingHref('hair cut', "Men's haircut"),
+      href: bookingHref('hair cut', "Men's haircut", 'men'),
       image: studio.mensCutMirror.src, alt: studio.mensCutMirror.alt, position: 'object-[38%_50%]',
     },
     {
@@ -118,7 +81,7 @@ export default async function HomePage() {
   const menuTabs: HeroMenuTab[] = [
     {
       id: 'men', label: 'For him',
-      rows: menRows.map((item) => ({ name: item.name, note: item.price, href: bookingHref(item.book, `Men's ${item.name.toLowerCase()}`), action: 'Book' })),
+      rows: menRows.map((item) => ({ name: item.name, note: item.price, href: bookingHref(item.book, `Men's ${item.name.toLowerCase()}`, 'men'), action: 'Book' })),
       more: { label: "Full men's menu & prices", href: '/men' },
     },
     {
@@ -210,7 +173,9 @@ export default async function HomePage() {
           <dl className="mx-auto grid max-w-[1180px] gap-x-10 gap-y-5 px-4 py-6 sm:px-6 md:grid-cols-3 lg:px-10">
             <div>
               <dt className="text-sm text-haze">Find us</dt>
-              <dd className="mt-0.5">{[info.address, settings.landmark].filter(Boolean).join(', ')}</dd>
+              <dd className="mt-0.5">
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="no-underline">{[info.address, settings.landmark].filter(Boolean).join(', ')}</a>
+              </dd>
             </div>
             <div>
               <dt className="text-sm text-haze">Call</dt>
@@ -221,43 +186,25 @@ export default async function HomePage() {
               <dd className="mt-0.5"><a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="tabular-nums">{info.whatsappNumber.replace(/^977/, '')}</a></dd>
             </div>
           </dl>
+          {info.mapEmbedUrl ? (
+            <figure className="mx-auto my-0 max-w-[1180px] px-4 pb-6 sm:px-6 lg:px-10">
+              <div className="overflow-hidden rounded-xl border border-line">
+                <iframe
+                  src={info.mapEmbedUrl}
+                  title={`${info.name} location in ${place || 'Birendranagar, Surkhet'}`}
+                  className="block h-[clamp(260px,36vw,420px)] w-full border-0"
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              </div>
+              <figcaption className="mt-3 flex flex-col items-start justify-between gap-2 text-sm sm:flex-row sm:items-center">
+                <span className="text-haze">{/glam/i.test(info.name) ? info.name : `${info.name} & Glam Studio`}, {[info.address, settings.landmark].filter(Boolean).join(', ')}</span>
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-brass underline-offset-4">Get directions in Google Maps</a>
+              </figcaption>
+            </figure>
+          ) : null}
         </div>
-
-        {servicesSection.isVisible ? (
-          <Section id="services" title={servicesSection.title || 'Services'} description={servicesSection.description}>
-            <div className="grid gap-[clamp(20px,3vw,36px)] sm:grid-cols-2 lg:grid-cols-3">
-              {SERVICE_MENU.map((group) => (
-                <div key={group.title} className="rounded-t-[200px] rounded-b-[14px] border border-line bg-panel px-[clamp(22px,2.6vw,32px)] pb-7 pt-[clamp(40px,5vw,56px)] sm:last:col-span-2 lg:last:col-span-1 sm:rounded-t-full">
-                  <h3 className="text-center font-display text-[1.9rem] font-normal">{group.title}</h3>
-                  <p className="mt-1.5 border-b border-line pb-5 text-center text-[0.9rem] text-brass">{group.side}</p>
-                  <ul className="mt-2">
-                    {group.items.map(([name, detail]) => (
-                      <li key={name} className="border-b border-dashed border-line py-3.5 last:border-b-0">
-                        <b className="block font-medium">{name}</b>
-                        <span className="text-[0.92rem] text-haze">{detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-            <p className="mt-7 text-[0.92rem] text-haze">Prices depend on hair length and the products used. Call or message us for a quote before you come in.</p>
-            {servicePages.length ? (
-              <ul className="mt-8 flex flex-wrap gap-2" aria-label="Service details">
-                {servicePages.map((page: ServicePage) => (
-                  <li key={page.slug}>
-                    <Link href={`/services/${page.slug}`} className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-[0.95rem] text-plaster transition hover:border-plaster">
-                      {page.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/services" className={BTN_LINE}>View the full rate card</Link>
-            </div>
-          </Section>
-        ) : null}
 
         {colour.isVisible ? (
           <section id="colour" className="scroll-mt-20 bg-panel py-16 md:py-24 lg:py-28">
@@ -303,7 +250,7 @@ export default async function HomePage() {
 
         {staffSection.isVisible && cms.staff.length ? (
           <Section theme="dark" eyebrow={staffSection.subtitle} title={staffSection.title} description={staffSection.description}>
-            <StaffCarousel staff={cms.staff} tone="dark" />
+            <StaffShowcase staff={cms.staff} layout={teamLayoutOf((staffSection.metadata as { layout?: string } | undefined)?.layout)} />
             <div className="mt-10">
               <Link href="/staff" className={BTN_LINE}>Meet the full team</Link>
             </div>
@@ -369,17 +316,17 @@ export default async function HomePage() {
                 <div className="relative aspect-[3/2] overflow-hidden rounded-lg shadow-[0_0_50px_rgba(240,169,75,0.15)]">
                   <CmsImage src={studio.storefront.src} alt={studio.storefront.alt} fill sizes="440px" className="object-cover" />
                 </div>
-                <figcaption className="mt-2.5 text-sm text-haze">Look for the black The Salon sign{settings.landmark ? `, ${settings.landmark.toLowerCase()}` : ''}.</figcaption>
+                <figcaption className="mt-2.5 text-sm text-haze">Look for the black The Salon sign{settings.landmark ? `, ${settings.landmark}` : ''}.</figcaption>
               </figure>
             </div>
 
             <div id="book" className="scroll-mt-20 rounded-xl border border-line bg-panel p-[clamp(22px,3.5vw,40px)]">
               <h3 className="font-display text-[2rem] font-normal leading-tight">Book a visit</h3>
               <p className="mt-2 text-[0.98rem] text-haze">
-                Choose your service, stylist and time online, or send the request straight to us on WhatsApp.
+                Choose men&apos;s or women&apos;s services and a date online, or send the request straight to us on WhatsApp.
               </p>
               <ul className="mt-6 grid gap-3 text-[0.95rem]">
-                {['Pick one or more services', 'Choose a date and a free time slot', 'We confirm your appointment'].map((step, index) => (
+                {["Choose men's or women's services", 'Pick a date and leave your WhatsApp number', 'We confirm your time on WhatsApp'].map((step, index) => (
                   <li key={step} className="flex items-center gap-3 border-b border-dashed border-line pb-3 last:border-b-0">
                     <span className="font-display text-xl text-brass">{String(index + 1).padStart(2, '0')}</span>
                     {step}
@@ -392,25 +339,6 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <figure className="m-0 overflow-hidden rounded-xl border border-line bg-panel md:col-span-2">
-              <iframe
-                src={info.mapEmbedUrl}
-                title={`${info.name} location in ${place || 'Birendranagar, Surkhet'}`}
-                className="block h-[clamp(320px,44vw,500px)] w-full border-0"
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
-              <figcaption className="flex flex-col items-start justify-between gap-4 border-t border-line px-[clamp(18px,3vw,28px)] py-[18px] sm:flex-row sm:items-center">
-                <span>
-                  <strong className="block font-medium">{/glam/i.test(info.name) ? info.name : `${info.name} & Glam Studio`}</strong>
-                  <span className="block text-sm text-haze">{[info.address, settings.landmark].filter(Boolean).join(', ')}</span>
-                </span>
-                <a href={settings.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${info.name} ${info.address}`)}`} target="_blank" rel="noopener noreferrer" className="shrink-0 text-brass underline-offset-4">
-                  Open in Google Maps
-                </a>
-              </figcaption>
-            </figure>
           </div>
         </section>
       </main>

@@ -5,6 +5,7 @@ import { Clock, Edit, Plus, Search, Scissors, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { activeServiceStaffFilter } from '@/lib/staff/service-staff';
+import { GenderFilter, genderLabel, matchesGender } from '@/components/shared/gender-filter';
 
 const CATEGORIES = ['Haircut', 'Hair Color', 'Facial', 'Beard', 'Treatment', 'Makeup', 'Spa', 'Other'];
 const emptyForm = {
@@ -14,6 +15,7 @@ const emptyForm = {
   duration_minutes: '',
   assigned_staff_ids: [],
   description: '',
+  gender: 'unisex',
   is_active: true
 };
 
@@ -22,6 +24,7 @@ export default function ServicesPage() {
   const [staff, setStaff] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [genderTab, setGenderTab] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
@@ -61,8 +64,8 @@ export default function ServicesPage() {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase())
       || service.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  }), [services, searchTerm, categoryFilter]);
+    return matchesSearch && matchesCategory && matchesGender(service, genderTab);
+  }), [services, searchTerm, categoryFilter, genderTab]);
 
   const openForm = (service = null) => {
     setError('');
@@ -74,6 +77,7 @@ export default function ServicesPage() {
       duration_minutes: service.duration_minutes || '',
       assigned_staff_ids: service.assigned_staff_ids ? service.assigned_staff_ids.split(',').filter(Boolean).map(Number) : [],
       description: service.description || '',
+      gender: service.gender || 'unisex',
       is_active: !!service.is_active
     } : emptyForm);
     setShowForm(true);
@@ -167,6 +171,7 @@ export default function ServicesPage() {
               <option value="all">All categories</option>
               {CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
             </select>
+            <GenderFilter value={genderTab} onChange={setGenderTab} className="md:col-span-2" />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -178,7 +183,10 @@ export default function ServicesPage() {
               <div key={service.id} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div>
-                    <div className="mb-2 inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">{service.category}</div>
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">{service.category}</span>
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${service.gender === 'women' ? 'bg-pink-50 text-pink-700' : service.gender === 'men' ? 'bg-sky-50 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>{genderLabel(service) || 'Men & Women'}</span>
+                    </div>
                     <h2 className="text-lg font-semibold text-gray-950">{service.name}</h2>
                     {service.description && <p className="mt-1 text-sm text-gray-600">{service.description}</p>}
                   </div>
@@ -224,6 +232,14 @@ export default function ServicesPage() {
                   <span className="mb-2 block text-sm font-medium text-gray-900">Category *</span>
                   <select required value={formData.category} onChange={(event) => setFormData({ ...formData, category: event.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-950 outline-none focus:ring-2 focus:ring-gray-900">
                     {CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-gray-900">For *</span>
+                  <select required value={formData.gender} onChange={(event) => setFormData({ ...formData, gender: event.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-950 outline-none focus:ring-2 focus:ring-gray-900">
+                    <option value="men">Men</option>
+                    <option value="women">Women</option>
+                    <option value="unisex">Men &amp; Women</option>
                   </select>
                 </label>
                 <label className="block">

@@ -64,7 +64,7 @@ export function defaultSeoSettings() {
     region: 'Karnali Province',
     postalCode: '',
     country: 'NP',
-    landmark: 'Opposite Karmachari Sanchaya Kosh',
+    landmark: '230m north from Tax Payers Office',
     parking: '',
     // Pin coordinates and opening hours are left for the owner to confirm in SEO & Local Search;
     // until then directions use the name + address and the site says "call to confirm".

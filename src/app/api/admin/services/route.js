@@ -16,6 +16,7 @@ export async function GET(request) {
     return NextResponse.json(await service.list({
       search: searchParams.get('search'),
       category: searchParams.get('category'),
+      gender: searchParams.get('gender'),
     }));
   } catch (error) {
     return NextResponse.json({ error: error.message || 'Failed to fetch services' }, { status: error.status || 500 });

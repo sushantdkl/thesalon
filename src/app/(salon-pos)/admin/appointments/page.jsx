@@ -8,6 +8,7 @@
 
 import { fmtDate, fmtDateTime } from '@/lib/dates/display';
 import { DateInput } from '@/components/shared/calendar-date-input';
+import { GenderFilter, genderLabel, matchesGender } from '@/components/shared/gender-filter';
 import Link from 'next/link';
 import { BillLink } from '@/components/bills/bill-detail';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -213,6 +214,7 @@ function AppointmentForm({ initial, services, staff, isAdmin, onSaved, onClose }
     source: initial?.source && initial.source !== 'WEBSITE' ? initial.source : 'PHONE',
     notes: initial?.notes || '',
   }));
+  const [genderTab, setGenderTab] = useState('all');
   const [slots, setSlots] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -286,8 +288,9 @@ function AppointmentForm({ initial, services, staff, isAdmin, onSaved, onClose }
         <label className={LABEL}>Phone<input className={FIELD} inputMode="tel" value={form.customerPhone} onChange={(event) => set('customerPhone', event.target.value)} autoComplete="off" /></label>
         <fieldset className="sm:col-span-2">
           <legend className={LABEL}>Services * <span className="font-normal normal-case text-stone-400">{duration ? `· ${duration} min total` : ''}</span></legend>
-          <div className="mt-1 flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-stone-200 p-2">
-            {services.map((service) => {
+          <GenderFilter value={genderTab} onChange={setGenderTab} className="mt-1" />
+          <div className="mt-2 flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-stone-200 p-2">
+            {services.filter((service) => matchesGender(service, genderTab) || form.serviceIds.includes(String(service.id))).map((service) => {
               const checked = form.serviceIds.includes(String(service.id));
               return (
                 <button
@@ -297,7 +300,7 @@ function AppointmentForm({ initial, services, staff, isAdmin, onSaved, onClose }
                   onClick={() => set('serviceIds', checked ? form.serviceIds.filter((id) => id !== String(service.id)) : [...form.serviceIds, String(service.id)])}
                   className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold ${checked ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'}`}
                 >
-                  {service.name} <span className="opacity-60">{service.duration_minutes || 30}m</span>
+                  {service.name} <span className="opacity-60">{genderTab === 'all' && genderLabel(service) ? `${genderLabel(service)} · ` : ''}{service.duration_minutes || 30}m</span>
                 </button>
               );
             })}

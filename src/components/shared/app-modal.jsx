@@ -45,6 +45,10 @@ export function AppModal({
   const styles = toneStyles[tone] || toneStyles.default;
   const Icon = styles.icon;
   const isConfirm = mode === 'confirm';
+  // Inline onClose is a new function each render; read it through a ref so focus is set only
+  // when the dialog opens, not on every parent re-render.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -54,7 +58,7 @@ export function AppModal({
     }, 0);
 
     const onKeyDown = (event) => {
-      if (event.key === 'Escape' && !loading) onClose?.();
+      if (event.key === 'Escape' && !loading) onCloseRef.current?.();
       if (event.key !== 'Tab') return;
       const focusable = [cancelRef.current, confirmRef.current].filter(Boolean);
       if (focusable.length < 2) return;
@@ -75,7 +79,7 @@ export function AppModal({
       document.removeEventListener('keydown', onKeyDown);
       previous?.focus?.();
     };
-  }, [open, loading, onClose, isConfirm]);
+  }, [open, loading, isConfirm]);
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => {

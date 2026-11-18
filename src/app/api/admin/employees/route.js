@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import Database from '@/lib/db/index';
 import { cleanText, ensureSalonSchema, requireAuth, requireRole } from '@/lib/salon-schema';
 import { APP_ROLES, normalizeRole } from '@/constants/roles';
@@ -15,6 +16,31 @@ function normalizeUsername(value) {
   return cleanText(value).toLowerCase().replace(/\s+/g, '');
 }
 
+const PIN_PATTERN = /^\d{4}$/;
+const PIN_MESSAGE = 'PIN must be exactly 4 digits';
+
+/** "System login" ticked (the default). Unticked staff are assigned work but cannot sign in. */
+function canLoginOf(data) {
+  return data.can_login !== false;
+}
+
+/** A hash nobody knows the PIN for: the account exists but cannot sign in. */
+function lockedPasswordHash() {
+  return bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 10);
+}
+
+/** Staff without a login still need a unique username; derive one from the name. */
+async function usernameForStaff(db, data) {
+  const typed = normalizeUsername(data.username);
+  if (typed || canLoginOf(data)) return typed;
+  const base = cleanText(data.full_name).toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').slice(0, 24) || 'staff';
+  for (let n = 0; n < 50; n += 1) {
+    const candidate = n ? `${base}${n + 1}` : base;
+    if (candidate.length >= 3 && !(await findUsernameConflict(db, candidate))) return candidate;
+  }
+  return `${base}.${crypto.randomBytes(3).toString('hex')}`;
+}
+
 /** 'commission' when "Commission-based staff" is ticked; salary-based otherwise (the default). */
 function payTypeOf(data) {
   return data.pay_type === 'commission' || data.commission_based === true ? 'commission' : 'salary';
@@ -28,7 +54,8 @@ function validateStaff(data, editing = false) {
   }
   if (!cleanText(data.full_name)) return 'Staff name is required';
   if (!APP_ROLES.includes(normalizeRole(data.salon_role || data.role))) return 'Valid role is required';
-  if (!editing && !/^\d{6,8}$/.test(String(data.password || ''))) return 'PIN must be 6 to 8 digits';
+  if (!editing && canLoginOf(data) && !PIN_PATTERN.test(String(data.password || ''))) return PIN_MESSAGE;
+  if (data.password && !PIN_PATTERN.test(String(data.password))) return PIN_MESSAGE;
   if (String(data.phone || '').trim() && !phoneOrNull(data.phone)) return PHONE_ERROR_MESSAGE;
   if (Number(data.commission_percentage || 0) < 0 || Number(data.commission_percentage || 0) > 100) return 'Commission must be between 0 and 100';
   if (Number(data.base_salary || 0) < 0) return 'Base salary cannot be negative';
@@ -123,6 +150,7 @@ export async function GET(request) {
 
     const employees = await db.all(`
       SELECT u.id, u.username, COALESCE(NULLIF(sp.display_name, ''), u.full_name) as full_name, u.role, u.email, u.phone, u.is_active, u.created_at,
+             COALESCE(u.can_login, TRUE) as can_login,
              COALESCE(sp.salon_role, u.role) as salon_role,
              COALESCE(sp.assigned_services, '') as assigned_services,
              COALESCE(sp.commission_percentage, 0) as commission_percentage,
@@ -158,7 +186,9 @@ export async function POST(request) {
     const db = Database.getInstance();
     await ensureSalonSchema();
     const user = await requireRole(request, db, 'admin');
-    const data = await request.json();
+    const body = await request.json();
+    const canLogin = canLoginOf(body);
+    const data = { ...body, username: await usernameForStaff(db, body) };
     const validationError = validateStaff(data);
     if (validationError) return NextResponse.json({ error: validationError, message: validationError }, { status: 400 });
 
@@ -168,10 +198,10 @@ export async function POST(request) {
 
     const role = normalizeRole(data.salon_role || data.role);
     const normalizedPhone = phoneOrNull(data.phone);
-    const hashedPassword = bcrypt.hashSync(String(data.password), 10);
+    const hashedPassword = canLogin ? bcrypt.hashSync(String(data.password), 10) : lockedPasswordHash();
     const result = await db.run(`
-      INSERT INTO users (username, full_name, role, password_hash, email, phone, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (username, full_name, role, password_hash, email, phone, is_active, can_login)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       username,
       cleanText(data.full_name),
@@ -179,7 +209,8 @@ export async function POST(request) {
       hashedPassword,
       cleanText(data.email, null),
       normalizedPhone,
-      data.is_active !== false
+      data.is_active !== false,
+      canLogin
     ]);
 
     await db.run(`
@@ -215,9 +246,15 @@ export async function PUT(request) {
     const user = await requireRole(request, db, 'admin');
     const data = await request.json();
     if (!data.id) return NextResponse.json({ error: 'Staff ID is required' }, { status: 400 });
-    const current = await db.get('SELECT id, username, role, is_active FROM users WHERE id = ?', [data.id]);
+    const current = await db.get('SELECT id, username, role, is_active, COALESCE(can_login, TRUE) AS can_login FROM users WHERE id = ?', [data.id]);
     if (!current) return NextResponse.json({ error: 'Staff member not found' }, { status: 404 });
     const protectedAdmin = isDefaultAdmin(current);
+    // The primary admin always keeps its login. Turning login ON for someone who had none
+    // needs a PIN, since their stored hash belongs to nobody.
+    const canLogin = protectedAdmin ? true : canLoginOf(data);
+    if (canLogin && !current.can_login && !data.password) {
+      return NextResponse.json({ error: 'Set a 4-digit PIN to give this person a system login', message: 'Set a 4-digit PIN to give this person a system login' }, { status: 400 });
+    }
     if (
       protectedAdmin &&
       (data.is_active === false || normalizeRole(data.salon_role || data.role) !== 'admin')
@@ -245,16 +282,19 @@ export async function PUT(request) {
         normalizedPhone,
         isActive
       ];
-      let sql = 'UPDATE users SET username = ?, full_name = ?, role = ?, email = ?, phone = ?, is_active = ?, updated_at = NOW()';
-      const newPassword = data.password;
+      let sql = 'UPDATE users SET username = ?, full_name = ?, role = ?, email = ?, phone = ?, is_active = ?, can_login = ?, updated_at = NOW()';
+      params.push(canLogin);
+      const newPassword = canLogin ? data.password : '';
       if (newPassword) {
-        if (!/^\d{6,8}$/.test(String(newPassword))) throw adminRuleError('PIN must be 6 to 8 digits');
+        if (!PIN_PATTERN.test(String(newPassword))) throw adminRuleError(PIN_MESSAGE);
         sql += ', password_hash = ?';
         params.push(bcrypt.hashSync(String(newPassword), 10));
       }
       sql += ' WHERE id = ?';
       params.push(data.id);
       await tx.run(sql, params);
+      // Login switched off: sign them out everywhere.
+      if (!canLogin) await tx.run('DELETE FROM sessions WHERE user_id = ?', [data.id]);
 
       await tx.run(`
         INSERT INTO staff_profiles (user_id, display_name, salon_role, assigned_services, commission_percentage, base_salary, pay_type)

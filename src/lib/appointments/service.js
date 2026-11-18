@@ -75,7 +75,7 @@ function weekdayOf(iso) {
 }
 
 /** Minutes past midnight right now, Nepal time. */
-function nowMinutesNepal() {
+export function nowMinutesNepal() {
   const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kathmandu', hour: '2-digit', minute: '2-digit', hour12: false })
     .format(new Date()).split(':').map(Number);
   return parts[0] * 60 + parts[1];

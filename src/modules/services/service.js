@@ -15,6 +15,7 @@ export class ServiceManagementService {
       services: await this.repository.list({
         search: sanitizeText(filters.search),
         category: sanitizeText(filters.category),
+        gender: sanitizeText(filters.gender),
       }),
       categories: SERVICE_CATEGORIES,
     };

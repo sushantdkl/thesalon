@@ -4,8 +4,9 @@ export const salonInfo = {
   description:
     "The Salon & Glam Studio in Birendranagar-8, Surkhet: sharp fades, soft layers, rich colour, party-ready makeup, bridal styling and grooming for men and women.",
   address: 'Birendranagar-8, Surkhet',
-  landmark: 'Opposite Karmachari Sanchaya Kosh',
+  landmark: '230m north from Tax Payers Office',
   phone: '083-590152',
+  email: 'thesalonandglamstudio@gmail.com',
   whatsappNumber: '9779802055983',
   openingHours: 'Walk-ins welcome. Call ahead for colour, bridal and group bookings.',
   mapLabel: 'The Salon & Glam Studio, Birendranagar-8, Surkhet',

@@ -3,7 +3,7 @@ export class ServiceRepository {
     this.db = db;
   }
 
-  async list({ search = '', category = '' } = {}) {
+  async list({ search = '', category = '', gender = '' } = {}) {
     const params = [];
     let where = 'WHERE 1=1';
 
@@ -15,6 +15,12 @@ export class ServiceRepository {
     if (category && category !== 'all') {
       where += ' AND s.category = ?';
       params.push(category);
+    }
+
+    // "men" / "women" also include unisex services (packages and anything for everyone).
+    if (gender === 'men' || gender === 'women') {
+      where += " AND s.gender IN (?, 'unisex')";
+      params.push(gender);
     }
 
     const sql = `
@@ -32,8 +38,8 @@ export class ServiceRepository {
 
   async create(service) {
     const result = await this.db.run(`
-      INSERT INTO salon_services (name, category, price, duration_minutes, assigned_staff_ids, description, is_active, is_package, package_items)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO salon_services (name, category, price, duration_minutes, assigned_staff_ids, description, is_active, is_package, package_items, gender)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       service.name,
       service.category,
@@ -43,7 +49,8 @@ export class ServiceRepository {
       service.description,
       service.is_active,
       service.is_package,
-      service.package_items
+      service.package_items,
+      service.gender
     ]);
 
     return await this.findById(result.lastInsertRowid);
@@ -53,7 +60,7 @@ export class ServiceRepository {
     await this.db.run(`
       UPDATE salon_services
       SET name = ?, category = ?, price = ?, duration_minutes = ?, assigned_staff_ids = ?,
-          description = ?, is_active = ?, is_package = ?, package_items = ?, updated_at = CURRENT_TIMESTAMP
+          description = ?, is_active = ?, is_package = ?, package_items = ?, gender = COALESCE(?, gender), updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [
       service.name,
@@ -65,6 +72,7 @@ export class ServiceRepository {
       service.is_active,
       service.is_package,
       service.package_items,
+      service.gender,
       service.id
     ]);
 

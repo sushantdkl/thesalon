@@ -61,7 +61,7 @@ export default async function WomenCategoryPage({ params }: Params) {
                     <p className="mt-1 text-[0.95rem] text-haze">{item.detail}</p>
                     <p className="mt-1.5 text-sm tabular-nums text-brass">{price || 'Price at the salon'}</p>
                   </div>
-                  <Link href={bookingHref(item.book, item.name)} className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-glow px-6 text-[0.95rem] font-medium text-cinder transition hover:brightness-110">
+                  <Link href={bookingHref(item.book, item.name, 'women')} className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-glow px-6 text-[0.95rem] font-medium text-cinder transition hover:brightness-110">
                     Book
                   </Link>
                 </li>

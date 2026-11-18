@@ -37,7 +37,7 @@ export default function WomenServicesPage() {
                 <ul className="mt-4 flex flex-wrap gap-2" aria-label={`Book ${category.name}`}>
                   {category.items.map((item) => (
                     <li key={item.name}>
-                      <Link href={bookingHref(item.book, item.name)} className="inline-flex min-h-10 items-center rounded-full border border-line px-3.5 text-sm text-plaster transition hover:border-glow">
+                      <Link href={bookingHref(item.book, item.name, 'women')} className="inline-flex min-h-10 items-center rounded-full border border-line px-3.5 text-sm text-plaster transition hover:border-glow">
                         {item.name}
                       </Link>
                     </li>

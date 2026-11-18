@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ReactNode, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { CalendarCheck, MapPin, Menu, MessageCircle, Phone, X } from 'lucide-react';
+import { CalendarCheck, Mail, MapPin, Menu, MessageCircle, Phone, X } from 'lucide-react';
 import { salonInfo } from '../data/salon-info';
 import { createWhatsAppLink } from '../utils/whatsapp';
 
@@ -21,13 +21,25 @@ type PublicLayoutInfo = Omit<typeof salonInfo, 'social'> & {
 };
 type FooterService = { slug: string; name: string };
 
-/** "THE / SALON" wordmark, after the business card. */
+/** Small monochrome brand marks for the contact strip (lucide has no TikTok icon). */
+function SocialIcon({ name }: { name: string }) {
+  const common = { className: 'h-3.5 w-3.5', viewBox: '0 0 24 24', fill: 'currentColor', 'aria-hidden': true } as const;
+  if (name === 'Facebook') {
+    return <svg {...common}><path d="M13.5 21v-7.5h2.5l.4-3h-2.9V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.5V21h3Z" /></svg>;
+  }
+  if (name === 'Instagram') {
+    return <svg {...common} fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>;
+  }
+  return <svg {...common}><path d="M16.6 3c.3 2.2 1.6 3.6 3.9 3.8v3.1c-1.4.1-2.6-.3-3.9-1.1v5.8c0 7.4-8 9.7-11.3 4.4-2.1-3.4-.8-9.4 6-9.6v3.3c-.5.1-1.1.2-1.6.4-1.5.5-2.3 1.4-2.1 3 .5 3.1 6.2 4 5.7-2V3h3.3Z" /></svg>;
+}
+
+/** The Salon & Glam Studio logo (white razor wordmark), sized by the surrounding font size. */
 export function Wordmark({ className = '', subline }: { className?: string; subline?: string }) {
   return (
-    <span className={`inline-flex flex-col font-jost font-bold leading-[0.9] ${className}`}>
-      <span className="text-[0.62em] tracking-[0.08em]">THE</span>
-      <span className="text-[1.25em] tracking-[0.04em]">SALON</span>
-      {subline ? <small className="mt-1 text-[0.42em] font-normal tracking-[0.06em] text-haze">{subline}</small> : null}
+    <span className={`inline-flex flex-col leading-none ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/img/logo-wordmark.png" alt="The Salon & Glam Studio" width={1344} height={798} className="h-[2.6em] w-auto" />
+      {subline ? <small className="mt-2 font-jost text-[0.5em] font-normal tracking-[0.06em] text-haze">{subline}</small> : null}
     </span>
   );
 }
@@ -80,8 +92,48 @@ export function PublicLayout({
     ['TikTok', info.social.tiktok],
   ].filter(([, href]) => href) as Array<[string, string]>;
 
+  const mapsUrl = directionsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${info.name} ${info.address}`)}`;
+  const place = [info.address, info.landmark].filter(Boolean).join(', ');
+
   return (
     <div className="salon-site min-h-screen bg-night font-jost [-webkit-tap-highlight-color:transparent] [text-size-adjust:100%] text-[1.0625rem] leading-relaxed text-plaster antialiased [color-scheme:dark]">
+      {/* Contact strip above the navbar: location, email, phone and social links. */}
+      <div className="border-b border-line bg-black text-[0.8rem] text-haze">
+        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-10">
+          <ul className="flex min-w-0 items-center gap-x-5 gap-y-1">
+            <li className="hidden min-w-0 md:block">
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-1.5 hover:text-plaster">
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{place}</span>
+              </a>
+            </li>
+            {info.email ? (
+              <li className="hidden sm:block">
+                <a href={`mailto:${info.email}`} className="inline-flex items-center gap-1.5 hover:text-plaster">
+                  <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {info.email}
+                </a>
+              </li>
+            ) : null}
+            <li>
+              <a href={telUrl} className="inline-flex items-center gap-1.5 tabular-nums hover:text-plaster">
+                <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                {info.phone}
+              </a>
+            </li>
+          </ul>
+          {socials.length ? (
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="hidden text-[0.7rem] font-medium uppercase tracking-[0.12em] lg:inline">Follow us</span>
+              {socials.map(([label, href]) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={`${info.name} on ${label}`} className="grid h-7 w-7 place-items-center rounded-full hover:text-plaster">
+                  <SocialIcon name={label} />
+                </a>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
       <header className="sticky top-0 z-40 border-b border-line bg-night/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
           <Link href="/" aria-label={`${info.name}, home`} className="text-lg text-plaster no-underline">

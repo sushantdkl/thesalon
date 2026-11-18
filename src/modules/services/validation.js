@@ -1,6 +1,8 @@
 import { SERVICE_CATEGORIES } from '@/constants/salon';
 import { sanitizeText, toPositiveInteger, toPositiveNumber } from '@/utils/sanitize';
 
+export const SERVICE_GENDERS = ['men', 'women', 'unisex'];
+
 export function normalizeServiceInput(data) {
   const name = sanitizeText(data.name);
   const category = sanitizeText(data.category);
@@ -22,6 +24,8 @@ export function normalizeServiceInput(data) {
     duration_minutes: duration,
     assigned_staff_ids: staffIds,
     description: sanitizeText(data.description, null),
+    // Missing on an edit = keep the stored value (see ServiceRepository.update).
+    gender: SERVICE_GENDERS.includes(data.gender) ? data.gender : (data.id ? null : 'unisex'),
     is_active: data.is_active === false ? 0 : 1,
     is_package: data.is_package ? 1 : 0,
     package_items: Array.isArray(data.package_items)

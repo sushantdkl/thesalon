@@ -32,4 +32,6 @@ export const TRACKED_MIGRATIONS = [
   '2026-11-02-men-rate-card.sql',
   '2026-11-02-studio-photos-cleanup.sql',
   '2026-11-04-audit-fixes.sql',
+  '2026-11-18-women-rate-card-and-new-staff.sql',
+  '2026-11-18-landmark-tax-payers-office.sql',
 ];

@@ -13,19 +13,17 @@ export function createWhatsAppLink(message?: string, whatsappNumber?: string) {
 export function createBookingMessage({
   name,
   phone,
+  side,
   service,
-  preferredStaff,
   date,
-  time,
   message,
   salonName,
 }: {
   name: string;
   phone: string;
+  side?: string;
   service: string;
-  preferredStaff?: string;
   date: string;
-  time: string;
   message?: string;
   salonName?: string;
 }) {
@@ -33,13 +31,12 @@ export function createBookingMessage({
     `Hello ${salonName || salonInfo.name}, I want to book an appointment.`,
     '',
     `Name: ${name}`,
-    `Phone: ${phone}`,
+    `WhatsApp: ${phone}`,
+    ...(side ? [`For: ${side}`] : []),
     `Service: ${service}`,
-    `Preferred Staff: ${preferredStaff || 'Any available staff'}`,
     `Date: ${date}`,
-    `Time: ${time}`,
     `Message: ${message || '-'}`,
     '',
-    'Please confirm my appointment.',
+    'Please let me know a time that works.',
   ].join('\n');
 }

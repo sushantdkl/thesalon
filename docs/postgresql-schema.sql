@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT,
   phone TEXT,
   is_active BOOLEAN DEFAULT TRUE,
+  can_login BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -81,8 +82,10 @@ CREATE TABLE IF NOT EXISTS salon_services (
   show_on_website BOOLEAN DEFAULT TRUE,
   featured_on_website BOOLEAN DEFAULT FALSE,
   website_image TEXT,
-  website_description TEXT
+  website_description TEXT,
+  gender TEXT NOT NULL DEFAULT 'unisex' CONSTRAINT salon_services_gender_check CHECK (gender IN ('men', 'women', 'unisex'))
 );
+CREATE INDEX IF NOT EXISTS idx_salon_services_gender ON salon_services (gender);
 
 CREATE TABLE IF NOT EXISTS staff_profiles (
   user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

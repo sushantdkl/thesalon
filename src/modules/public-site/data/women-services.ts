@@ -117,8 +117,9 @@ export const womenServices: WomenServiceCategory[] = [
 ];
 
 /** Link that opens the booking form with this service already chosen. */
-export function bookingHref(service: string, label?: string) {
+export function bookingHref(service: string, label?: string, gender?: 'men' | 'women') {
   const params = new URLSearchParams({ service });
   if (label) params.set('label', label);
+  if (gender) params.set('gender', gender);
   return `/book-appointment?${params}`;
 }

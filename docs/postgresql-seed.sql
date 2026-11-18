@@ -50,6 +50,9 @@ VALUES
   ('Hair Spa', 'Spa', 1500, 60, 'Starting from Rs 1500', FALSE, NULL, TRUE),
   ('Manicure', 'Other', 1000, 45, 'Starting from Rs 1000', FALSE, NULL, TRUE),
   ('Pedicure', 'Other', 2000, 60, 'Starting from Rs 2000', FALSE, NULL, TRUE);
+-- The list above is the men's printed price list. The women's list is added by
+-- docs/migrations/2026-11-18-women-rate-card-and-new-staff.sql (npm run db:migrate).
+UPDATE salon_services SET gender = 'men' WHERE COALESCE(is_package, FALSE) = FALSE AND gender = 'unisex';
 
 -- Inventory products
 INSERT INTO salon_products (name, category, purchase_price, selling_price, current_stock, low_stock_threshold, supplier, status)
@@ -59,25 +62,32 @@ VALUES
   ('Facial Kit', 'Facial Kit', 900, 1400, 8, 3, 'Beauty Care', 'active'),
   ('Hair Wax', 'Styling', 220, 400, 15, 5, 'Style Hub', 'active');
 
--- Demo staff/users with PINs (bcrypt via pgcrypto)
+-- Admin (demo PIN) and The Salon's team. Team members start without a system login; the owner
+-- ticks "System login" and sets a 4-digit PIN in Employees for anyone who should sign in.
 WITH staff_seed (username, full_name, role, salon_role, pin, email, assigned_services, commission_percentage, base_salary) AS (
   VALUES
     ('admin', 'Admin', 'admin', 'admin', '111111', 'admin@thesalon.local', '', 0, 0),
-    ('kanchan', 'Kanchan', 'beautician', 'beautician', '222222', 'kanchan@thesalon.local', 'Normal Cleansing,Deep Cleansing,Wine Facial,Fruit Facial,Lotus Facial,Threading', 10, 0),
-    ('raashid', 'Raashid', 'barber', 'barber', '333333', 'raashid@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0),
-    ('salman', 'Salman', 'barber', 'barber', '444444', 'salman@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0),
-    ('saajid', 'Saajid', 'barber', 'barber', '555555', 'saajid@thesalon.local', 'Hair Cut,Hair Wash,Shaving,Head Massage,Threading', 10, 0)
+    ('nisha', 'Nisha Sunar', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('khagisara', 'Khagisara Lamichhane', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('kamala', 'Kamala B.K.', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('sapana', 'Sapana Nepali', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('pradip', 'Pradip Sunar', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('ramjan', 'Ramjan Ansari', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('kamil', 'Kamil Ansari', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('asif', 'Asif Salmani', 'stylist', 'stylist', NULL, NULL, '', 0, 0),
+    ('babita', 'Babita Rawat', 'cashier', 'cashier', NULL, NULL, '', 0, 0)
 ),
 upsert_users AS (
-  INSERT INTO users (username, full_name, role, password_hash, email, phone, is_active)
+  INSERT INTO users (username, full_name, role, password_hash, email, phone, is_active, can_login)
   SELECT
     username,
     full_name,
     role,
-    crypt(pin, gen_salt('bf')),
+    crypt(COALESCE(pin, gen_random_uuid()::text), gen_salt('bf')),
     email,
     '',
-    TRUE
+    TRUE,
+    pin IS NOT NULL
   FROM staff_seed
   -- Never overwrite password_hash: re-running the seed on a live database must not reset
   -- real PINs back to the demo values.
@@ -89,7 +99,7 @@ upsert_users AS (
     updated_at = NOW()
   RETURNING id, username
 )
--- Launch logins are kept off the public website until the owner chooses who to show.
+-- Service staff are shown on the public website; admin and cashier are not.
 INSERT INTO staff_profiles (user_id, display_name, salon_role, assigned_services, commission_percentage, base_salary, show_on_website)
 SELECT
   u.id,
@@ -98,7 +108,7 @@ SELECT
   s.assigned_services,
   s.commission_percentage,
   s.base_salary,
-  FALSE
+  s.salon_role IN ('barber', 'stylist', 'beautician')
 FROM upsert_users u
 JOIN staff_seed s USING (username)
 ON CONFLICT (user_id) DO UPDATE SET

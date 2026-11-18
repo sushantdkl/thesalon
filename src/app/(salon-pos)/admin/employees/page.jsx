@@ -19,7 +19,8 @@ const emptyForm = {
   base_salary: '',
   pay_type: 'salary',
   assigned_services: '',
-  is_active: true
+  is_active: true,
+  can_login: true
 };
 
 const SERVICE_ROLES = ['barber', 'stylist', 'beautician'];
@@ -72,7 +73,8 @@ export default function StaffPage() {
       base_salary: employee.base_salary ?? '',
       pay_type: employee.pay_type || 'salary',
       assigned_services: employee.assigned_services || '',
-      is_active: !!employee.is_active
+      is_active: !!employee.is_active,
+      can_login: employee.can_login !== false
     } : emptyForm);
     setShowForm(true);
   };
@@ -83,6 +85,12 @@ export default function StaffPage() {
     setPageMessage('');
     if (formData.phone && !isValidPhone(formData.phone)) {
       setError(PHONE_ERROR_MESSAGE);
+      return;
+    }
+    const loginOn = editingDefaultAdmin || formData.can_login;
+    const needsPin = loginOn && (!editingStaff || editingStaff.can_login === false);
+    if ((needsPin || formData.password) && loginOn && !/^\d{4}$/.test(formData.password)) {
+      setError('PIN must be exactly 4 digits.');
       return;
     }
     const response = await fetch('/api/admin/employees', {
@@ -333,19 +341,19 @@ export default function StaffPage() {
             <form onSubmit={handleSubmit} className="grid gap-4 p-4 sm:p-6 md:grid-cols-2">
               {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 md:col-span-2">{error}</div>}
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-gray-900">Username *</span>
+                <span className="mb-2 block text-sm font-medium text-gray-900">Username{formData.can_login ? ' *' : ''}</span>
                 <input
-                  required
+                  required={formData.can_login}
                   disabled={editingDefaultAdmin}
                   value={formData.username}
                   onChange={(event) => setFormData({
                     ...formData,
                     username: event.target.value.toLowerCase().replace(/\s+/g, ''),
                   })}
-                  placeholder="e.g. raashid"
+                  placeholder="e.g. nisha"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-950 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-gray-900 disabled:bg-gray-100 disabled:text-gray-500"
                 />
-                <p className="mt-1 text-xs text-gray-500">Must be unique. Letters/numbers only — used for login.</p>
+                <p className="mt-1 text-xs text-gray-500">{formData.can_login ? 'Must be unique. Letters/numbers only — used for login.' : 'Optional without a system login — made from the name if left blank.'}</p>
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-gray-900">Staff name *</span>
@@ -357,13 +365,48 @@ export default function StaffPage() {
                   {APP_ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}
                 </select>
               </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-gray-900">{editingStaff ? 'New PIN' : 'PIN *'}</span>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input type="text" inputMode="numeric" required={!editingStaff} value={formData.password} onChange={(event) => setFormData({ ...formData, password: event.target.value })} className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-gray-950 outline-none focus:ring-2 focus:ring-gray-900" placeholder="6 to 8 digits" minLength={6} maxLength={8} pattern="d{6,8}" />
-                </div>
+              <label className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 md:col-span-2">
+                <span>
+                  <span className="block text-sm font-semibold text-gray-950">System login</span>
+                  <span className="block text-sm text-gray-600">
+                    {editingDefaultAdmin || formData.can_login
+                      ? 'This person signs in with a username and PIN.'
+                      : 'No login. They can still be assigned services in billing.'}
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 shrink-0"
+                  disabled={editingDefaultAdmin}
+                  checked={editingDefaultAdmin ? true : formData.can_login}
+                  onChange={(event) => setFormData({ ...formData, can_login: event.target.checked, password: event.target.checked ? formData.password : '' })}
+                />
               </label>
+              {editingDefaultAdmin || formData.can_login ? (
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-gray-900">
+                    {editingStaff && editingStaff.can_login !== false ? 'New PIN' : 'PIN *'}
+                  </span>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      required={!editingStaff || editingStaff.can_login === false}
+                      value={formData.password}
+                      onChange={(event) => setFormData({ ...formData, password: event.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 tracking-[0.3em] text-gray-950 outline-none focus:ring-2 focus:ring-gray-900"
+                      placeholder="4 digits"
+                      minLength={4}
+                      maxLength={4}
+                      pattern="\d{4}"
+                      title="Exactly 4 digits"
+                    />
+                  </div>
+                  {editingStaff && editingStaff.can_login !== false ? <p className="mt-1 text-xs text-gray-500">Leave blank to keep the current PIN.</p> : null}
+                </label>
+              ) : null}
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-gray-900">Phone</span>
                 <input value={formData.phone} onChange={(event) => setFormData({ ...formData, phone: sanitizePhoneInput(event.target.value) })} className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-950 outline-none focus:ring-2 focus:ring-gray-900" />

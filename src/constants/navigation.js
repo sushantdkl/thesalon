@@ -69,6 +69,14 @@ const ADMIN_NAV = [
   link('Customers', '/admin/customers', Contact),
   link('Customer Ledger', '/admin/customer-ledger', BookUser),
   link('Supplier Ledger', '/admin/supplier-ledger', BookOpen),
+  group('finance', 'Finance', 'finance', Wallet, [
+    link('Opening & Closing', '/store/opening-closing', DoorOpen),
+    link('Expenses', '/dashboard/admin/expenses', Receipt),
+    link('Savings', '/admin/savings', PiggyBank),
+    link('Cash In / Out', '/admin/cash-drawer', ArrowDownUp),
+    link('Cash Exchange', '/admin/cash-exchange', ArrowLeftRight),
+    link('Credit Collection', '/cashier/credit', Wallet),
+  ]),
   group('reports', 'Reports', 'reports', ChartPie, [
     link('Business Overview', '/admin/reports', ChartPie, { exact: true }),
     link('Sales & Invoices', '/admin/reports/center/sales', ReceiptText),
@@ -102,14 +110,6 @@ const ADMIN_NAV = [
     link('Purchases', '/admin/purchases', PackagePlus),
     link('Suppliers', '/admin/suppliers', Truck),
   ]),
-  group('finance', 'Finance', 'finance', Wallet, [
-    link('Opening & Closing', '/store/opening-closing', DoorOpen),
-    link('Expenses', '/dashboard/admin/expenses', Receipt),
-    link('Savings', '/admin/savings', PiggyBank),
-    link('Cash In / Out', '/admin/cash-drawer', ArrowDownUp),
-    link('Cash Exchange', '/admin/cash-exchange', ArrowLeftRight),
-    link('Credit Collection', '/cashier/credit', Wallet),
-  ]),
   group('hrm', 'HRM', 'hrm', Users, [
     link('Employees', '/admin/employees', Users),
     link('Attendance', '/admin/hrm/attendance', UserCheck),
@@ -140,6 +140,14 @@ const CASHIER_NAV = [
   link('Customers', '/admin/customers', Contact, { permission: 'customers.manage' }),
   link('Customer Ledger', '/admin/customer-ledger', BookUser),
   link('Supplier Ledger', '/admin/supplier-ledger', BookOpen, { permission: 'suppliers.manage' }),
+  group('finance', 'Finance', 'finance', Wallet, [
+    link('Opening & Closing', '/store/opening-closing', DoorOpen),
+    link('Daily Expenses', '/dashboard/cashier/daily-expenses', Receipt, { permission: 'expenses.daily' }),
+    link('Savings', '/dashboard/cashier/savings', PiggyBank, { permission: 'savings.deposit' }),
+    link('Cash In / Out', '/admin/cash-drawer', ArrowDownUp, { permission: 'cash.movements' }),
+    link('Cash Exchange', '/admin/cash-exchange', ArrowLeftRight, { permission: 'cash.exchange' }),
+    link('Credit Collection', '/cashier/credit', Wallet, { permission: 'billing.credit.create' }),
+  ]),
   group('reports', 'Reports', 'reports', ChartPie, [
     link('Business Overview', '/admin/reports', ChartPie, { exact: true, permission: 'reports.overview' }),
     link('Sales & Invoices', '/admin/reports/center/sales', ReceiptText, { permission: 'reports.view' }),
@@ -171,14 +179,6 @@ const CASHIER_NAV = [
     link('Products & Stock', '/admin/stock', Warehouse, { permission: 'stock.manage' }),
     link('Purchases', '/admin/purchases', PackagePlus, { permission: 'suppliers.manage' }),
     link('Suppliers', '/admin/suppliers', Truck, { permission: 'suppliers.manage' }),
-  ]),
-  group('finance', 'Finance', 'finance', Wallet, [
-    link('Opening & Closing', '/store/opening-closing', DoorOpen),
-    link('Daily Expenses', '/dashboard/cashier/daily-expenses', Receipt, { permission: 'expenses.daily' }),
-    link('Savings', '/dashboard/cashier/savings', PiggyBank, { permission: 'savings.deposit' }),
-    link('Cash In / Out', '/admin/cash-drawer', ArrowDownUp, { permission: 'cash.movements' }),
-    link('Cash Exchange', '/admin/cash-exchange', ArrowLeftRight, { permission: 'cash.exchange' }),
-    link('Credit Collection', '/cashier/credit', Wallet, { permission: 'billing.credit.create' }),
   ]),
   group('hrm', 'HRM', 'hrm', Users, [
     link('My Attendance', '/attendance/my', UserCheck),

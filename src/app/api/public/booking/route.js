@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Database from '@/lib/db/index';
 import { ensureSalonSchema } from '@/lib/salon-schema';
-import { createAppointment, getAvailability, getSchedulingSettings } from '@/lib/appointments/service';
+import { createAppointment, fromMinutes, getAvailability, getSchedulingSettings, nowMinutesNepal } from '@/lib/appointments/service';
 import { normalizePhone } from '@/lib/validation/phone';
 import { clientIp, rateLimit } from '@/lib/security/rate-limit';
 import { appointmentError } from '@/app/api/appointments/_shared';
@@ -34,7 +34,7 @@ export async function GET(request) {
     const params = new URL(request.url).searchParams;
     const [services, staff] = await Promise.all([
       db.all(`
-        SELECT id, name, category, price, duration_minutes
+        SELECT id, name, category, price, duration_minutes, gender
         FROM salon_services
         WHERE is_active = TRUE AND COALESCE(show_on_website, TRUE) = TRUE
         ORDER BY category, name
@@ -79,7 +79,7 @@ export async function GET(request) {
       closeTime: settings.closeTime,
       maxDaysAhead: settings.maxDaysAhead,
       services: services.map((service) => ({
-        id: service.id, name: service.name, category: service.category,
+        id: service.id, name: service.name, category: service.category, gender: service.gender || 'unisex',
         price: Number(service.price || 0), duration: Number(service.duration_minutes || 30),
       })),
       staff: staff.map((member) => ({ id: member.id, name: member.name, role: member.role })),
@@ -130,16 +130,34 @@ export async function POST(request) {
       if (!visible) return NextResponse.json({ error: 'That staff member does not take online bookings' }, { status: 400 });
     }
 
+    // The website asks for a day only; the salon agrees the exact time with the customer on
+    // WhatsApp. The request is held at opening time (or the next half hour, for today) and
+    // flagged so the front desk sets the real time when confirming.
+    let startTime = String(data.startTime || '').trim();
+    let notes = String(data.notes || '').slice(0, 500);
+    if (!startTime) {
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kathmandu' }).format(new Date());
+      let start = settings.openMinutes;
+      if (String(data.date || '').slice(0, 10) === today) {
+        start = Math.max(start, Math.ceil((nowMinutesNepal() + 1) / 30) * 30);
+        if (start + 30 > settings.closeMinutes) {
+          return NextResponse.json({ error: 'We are closing for today. Please choose another date.' }, { status: 400 });
+        }
+      }
+      startTime = fromMinutes(start);
+      notes = ['Time to be agreed on WhatsApp', notes].filter(Boolean).join(' · ').slice(0, 500);
+    }
+
     const result = await createAppointment(db, null, {
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       date: data.date,
-      startTime: data.startTime,
+      startTime,
       services: Array.isArray(data.serviceIds) ? data.serviceIds.slice(0, 5) : [],
       requestedServiceText: data.requestedServiceText,
       staffId,
       requestedStaffText: data.requestedStaffText,
-      notes: String(data.notes || '').slice(0, 500),
+      notes,
       idempotencyKey: data.idempotencyKey,
     }, { publicRequest: true });
 

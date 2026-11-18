@@ -10,6 +10,7 @@ import { formatCurrency } from '@/lib/currency';
 import { buildCustomerReceiptHtml } from '@/lib/documents/customer-receipt';
 import { PHONE_ERROR_MESSAGE, isValidPhone, sanitizePhoneInput } from '@/lib/validation/phone';
 import { activeServiceStaffFilter, staffForService as filterStaffForService } from '@/lib/staff/service-staff';
+import { GenderFilter, genderLabel, matchesGender } from '@/components/shared/gender-filter';
 
 const draftKey = 'salon_pos_bill_draft';
 const walkInCustomer = { id: '', name: 'Walk-in Customer', phone: '' };
@@ -52,6 +53,7 @@ function BillingContent() {
   const [staff, setStaff] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [catalogTab, setCatalogTab] = useState('services');
+  const [genderTab, setGenderTab] = useState('all');
   const [cartServices, setCartServices] = useState([]);
   const [cartProducts, setCartProducts] = useState([]);
   const [customer, setCustomer] = useState(walkInCustomer);
@@ -170,10 +172,12 @@ function BillingContent() {
     }));
   }, [cartServices, cartProducts, customer, discountType, discountValue, paymentMethod, splitCashAmount, splitQrAmount, splitCreditAmount, splitQrType, onlineQrType]);
 
+  // All / Men / Women: Men and Women each also show unisex services (packages etc.).
   const filteredServices = useMemo(() => services.filter((service) =>
-    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.category.toLowerCase().includes(searchTerm.toLowerCase())
-  ), [services, searchTerm]);
+    matchesGender(service, genderTab) && (
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.category.toLowerCase().includes(searchTerm.toLowerCase()))
+  ), [services, searchTerm, genderTab]);
 
   const filteredProducts = useMemo(() => products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -661,6 +665,9 @@ function BillingContent() {
                     </button>
                   ))}
                 </div>
+                {catalogTab === 'services' ? (
+                  <GenderFilter value={genderTab} onChange={setGenderTab} className="mt-3" />
+                ) : null}
               </div>
 
               <div className="max-h-[56vh] overflow-y-auto p-4 sm:p-5">
@@ -679,6 +686,7 @@ function BillingContent() {
                             <p className="mt-0.5 text-xs text-gray-500">
                               {service.category} · {service.duration_minutes} min
                               {service.is_package ? ' · Package' : ''}
+                              {genderTab === 'all' && genderLabel(service) ? ` · ${genderLabel(service)}` : ''}
                             </p>
                           </div>
                           <span className="shrink-0 rounded-lg bg-[#FBF7EF] px-2 py-1 text-sm font-extrabold tabular-nums text-[#6B5321] group-hover:bg-[#F4EDE0]">{formatCurrency(service.price)}</span>

@@ -19,6 +19,12 @@ const sectionMap = {
   SEO: 'seo',
 };
 const listTabs = new Set(['Services', 'Packages', 'Staff', 'Gallery']);
+// Home-page "Meet the team" layouts (see modules/public-site/components/staff-showcase.tsx).
+const TEAM_LAYOUT_OPTIONS = [
+  ['carousel', 'Carousel', 'Large cards, scroll with arrows'],
+  ['grid', 'Grid', 'Every card on screen at once'],
+  ['circles', 'Circles', 'Round photos in a sliding row'],
+];
 const categories = ['Haircut', 'Hair Color', 'Facial', 'Beard', 'Treatment', 'Makeup', 'Spa', 'Other'];
 const galleryCategories = [
   'Salon Space',
@@ -601,6 +607,31 @@ export default function WebsiteCmsPage() {
               />
             </Field>
           </div>
+          {activeTab === 'Staff' ? (
+            <fieldset className="mt-4">
+              <legend className="mb-2 text-sm font-medium text-gray-900">Team layout on the home page</legend>
+              <div role="radiogroup" className="grid gap-2 sm:grid-cols-3">
+                {TEAM_LAYOUT_OPTIONS.map(([value, label, hint]) => {
+                  const current = activeSection.metadata?.layout || 'carousel';
+                  const on = current === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => updateSectionMetadata('staff', { layout: value })}
+                      className={`rounded-lg border px-4 py-3 text-left transition ${on ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-200 bg-white text-gray-900 hover:border-gray-400'}`}
+                    >
+                      <span className="block text-sm font-semibold">{label}</span>
+                      <span className={`mt-0.5 block text-xs ${on ? 'text-white/70' : 'text-gray-500'}`}>{hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-gray-500">Press Save CMS to switch the live site.</p>
+            </fieldset>
+          ) : null}
         </section>
       ) : null}
 

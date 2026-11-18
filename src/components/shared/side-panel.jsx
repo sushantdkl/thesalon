@@ -14,11 +14,16 @@ export function SidePanel({
   open = true, title, eyebrow, icon: Icon, subtitle, badge, onClose, children, footer, width = 'max-w-lg', label,
 }) {
   const panelRef = useRef(null);
+  // Callers usually pass an inline onClose, which is a new function on every render. Reading it
+  // through a ref keeps the effect below to "panel opened / closed" only; depending on onClose
+  // re-ran it on every keystroke and pulled focus out of the input being typed in.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (!open) return undefined;
     const previous = document.activeElement;
-    const onKey = (event) => { if (event.key === 'Escape') onClose?.(); };
+    const onKey = (event) => { if (event.key === 'Escape') onCloseRef.current?.(); };
     document.addEventListener('keydown', onKey);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -28,7 +33,7 @@ export function SidePanel({
       document.body.style.overflow = overflow;
       if (previous && typeof previous.focus === 'function') previous.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
   return (
